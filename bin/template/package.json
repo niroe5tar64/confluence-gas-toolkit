@@ -1,0 +1,24 @@
+{
+  "name": "${PACKAGE_NAME}",
+  "version": "${PACKEGE_VERSION}",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "bun run ./bin/builder/cli.ts src/index.ts dist/index.js",
+    "login": "bunx clasp login"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.5.2",
+    "@google/clasp": "^2.4.2",
+    "@types/bun": "^1.0.2",
+    "@types/fs-extra": "^11.0.4",
+    "@types/google-apps-script": "^1.0.78",
+    "bun-types": "latest",
+    "fs-extra": "^11.2.0",
+    "vite": "^5.0.11"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {}
+}
