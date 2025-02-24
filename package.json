@@ -1,14 +1,8 @@
 {
-  "name": "gas-toolkit",
+  "name": "confluence-gas-toolkit",
   "version": "0.0.1",
-  "description": "Bun template for Google Apps Script",
-  "author": "ncukondo",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ncukondo/bun-gas.git"
-  },
-  "homepage": "https://github.com/ncukondo/bun-gas",
+  "description": "Toolkit for Google Apps Script",
+  "author": "futakuchi-eitaro",
   "type": "module",
   "module": "index.ts",
   "devDependencies": {
