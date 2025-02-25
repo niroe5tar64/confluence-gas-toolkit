@@ -1,20 +1,11 @@
-// Entry file for GAS
+const doPost = (event: GoogleAppsScript.Events.DoPost) => {
+  Logger.log("Webhook received:", event.postData.contents);
 
-// You can import modules from local or npm
-import { calc } from "./module-sample";
+  const res = ContentService.createTextOutput(
+    JSON.stringify({ message: "Hello World" }),
+  ).setMimeType(ContentService.MimeType.JSON);
 
-const constantValueSample = "sample";
-
-/**!
- * appendToRow
- * @param row
- */
-const appendToRow = (row: string[]) => {
-  const sheet = SpreadsheetApp.getActiveSheet();
-  sheet.appendRow(row);
+  return res;
 };
 
-// all exports in entry file will be exposed as global variable
-// You can access these functions from GAS editor
-// You can export function or constant value
-export { appendToRow, calc, constantValueSample };
+export { doPost };
