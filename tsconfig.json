@@ -1,5 +1,12 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "~/clients": ["src/clients"],
+      "~/services": ["src/services"],
+      "~/types": ["src/types"],
+      "~/utils": ["src/utils"],
+    },
     "lib": ["ESNext"],
     "module": "esnext",
     "target": "es2020",
