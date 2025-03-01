@@ -13,7 +13,8 @@ export async function debug() {
 
   console.log("****************************");
   const result = await client.getSearchPage({
-    query: "lastModified >= now('-7d') ORDER BY lastModified DESC",
+    extraCql: "lastModified >= now('-7d') ORDER BY lastModified DESC",
+    option: { limit: 1, start: 2 },
   });
   console.log(result);
 }

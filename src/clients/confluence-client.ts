@@ -1,4 +1,6 @@
 import type { Confluence } from "~/types";
+import { convertToQueryString } from "~/utils";
+
 import HttpClient from "./http-client";
 
 /**
@@ -41,9 +43,9 @@ export default class ConfluenceClient extends HttpClient {
    * @template T - 期待するレスポンスの型
    * @param {"GET" | "POST" | "PUT" | "DELETE"} method - HTTP メソッド
    * @param {string} endpoint - API のエンドポイント (例: `"/rest/api/content/12345"`)
-   * @param {string | Record<string, string> | Blob} [requestBody] - 送信するリクエストボディ
+   * @param {string | Record<string, string | number | boolean> | Blob} [requestBody] - 送信するリクエストボディ
    *   - `string`: JSON 以外のテキストデータを送信する場合
-   *   - `Record<string, string>`: JSON 形式のデータを送信する場合 (自動的に `JSON.stringify()` される)
+   *   - `Record<string, string | number | boolean>`: JSON 形式のデータを送信する場合 (自動的に `JSON.stringify()` される)
    *   - `Blob`: バイナリデータを送信する場合
    * @returns {Promise<T>} API レスポンスを JSON としてパースしたオブジェクト
    *
@@ -52,7 +54,7 @@ export default class ConfluenceClient extends HttpClient {
   private async callApi<T>(
     method: "GET" | "POST" | "PUT" | "DELETE",
     endpoint: string,
-    requestBody?: string | Record<string, string> | Blob,
+    requestBody?: string | Record<string, string | number | boolean> | Blob,
   ): Promise<T> {
     const headers: Record<string, string> = {
       Authorization: `Bearer ${this.token}`,
@@ -100,16 +102,27 @@ export default class ConfluenceClient extends HttpClient {
    * クエリに一致するページを取得します。
    *
    * @param {Object} request - 検索クエリを含むオブジェクト。
-   * @param {string} request.query - Confluence Query Language（CQL）を使用した検索クエリ文字列。
+   * @param {string} request.extraCql - 追加の Confluence Query Language（CQL）条件。
+   *                                    デフォルトの CQL に対して、実行時に追加される検索クエリを指定します。
+   * @param {Confluence.SearchRequestOption} [request.option] - 検索リクエストの追加オプション。
+   * @param {number} [request.option.start] - 取得を開始する位置を指定するオフセット。デフォルトは 0 です。
+   * @param {number} [request.option.limit] - 取得する結果の最大数。デフォルトは 25 です。
+   * @param {string} [request.option.expand] - 取得する追加情報を指定するためのプロパティ。カンマ区切りで複数指定可能です。
+   * @param {string} [request.option.cqlcontext] - 検索クエリのコンテキストを指定する JSON 文字列。例：'{"spaceKey": "SomeSpaceKey"}'
    *
-   * @returns 検索結果を含む `Confluence.SearchPage` オブジェクトの Promise。
+   * @returns {Promise<Confluence.SearchPage>} 検索結果を含む `Confluence.SearchPage` オブジェクトの Promise。
    *
-   * @throws APIリクエストに失敗した場合、エラーをスローします。```
+   * @throws {Error} APIリクエストに失敗した場合、エラーをスローします。
    */
-  async getSearchPage(request: { query: string }): Promise<Confluence.SearchPage> {
+  async getSearchPage(request: {
+    extraCql: string;
+    option?: Confluence.SearchRequestOption;
+  }): Promise<Confluence.SearchPage> {
+    const cql = `type=page AND space=${this.spaceKey} AND ${request.extraCql}`;
+    const queryObject = request.option ? { ...request.option, cql } : { cql };
     return this.callApi<Confluence.SearchPage>(
       "GET",
-      `/rest/api/content/search?cql=type=page AND space=${this.spaceKey} AND ${request.query}`,
+      `/rest/api/content/search?${convertToQueryString(queryObject)}`,
     );
   }
 }
