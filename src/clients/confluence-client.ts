@@ -1,3 +1,4 @@
+import type { ConfluencePage } from "~/types";
 import HttpClient from "./http-client";
 
 /**
@@ -71,5 +72,18 @@ export default class ConfluenceClient extends HttpClient {
       }
       throw error;
     }
+  }
+
+  /**
+   * 指定されたページ ID の Confluence ページ情報を取得する。
+   *
+   * @param {Object} request - リクエストオブジェクト
+   * @param {string} request.pageId - 取得するページの ID
+   * @returns {Promise<ConfluencePage>} ページ情報を含む `ConfluencePage` オブジェクト
+   *
+   * @throws {Error} ページの取得に失敗した場合
+   */
+  async getPage(request: { pageId: string }): Promise<ConfluencePage> {
+    return this.callApi<ConfluencePage>("GET", `/rest/api/content/${request.pageId}`);
   }
 }
