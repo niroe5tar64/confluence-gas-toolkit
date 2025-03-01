@@ -1,12 +1,9 @@
-export interface ConfluencePage {
-  id: string;
-  title: string;
-  type: string;
-  space: { key: string };
-  body: {
-    storage: {
-      value: string;
-      representation: string;
-    };
-  };
+import type {
+  Content as ConfluenceContent,
+  SearchPageResponseSearchResult,
+} from "fetch-confluence";
+
+export namespace Confluence {
+  export interface Content extends ConfluenceContent {}
+  export interface SearchPage extends SearchPageResponseSearchResult {}
 }

@@ -1,4 +1,4 @@
-import type { ConfluencePage } from "~/types";
+import type { Confluence } from "~/types";
 import HttpClient from "./http-client";
 
 /**
@@ -85,12 +85,12 @@ export default class ConfluenceClient extends HttpClient {
    *
    * @param {Object} request - リクエストオブジェクト
    * @param {string} request.pageId - 取得するページの ID
-   * @returns {Promise<ConfluencePage>} ページ情報を含む `ConfluencePage` オブジェクト
+   * @returns {Promise<Confluence.Content>} ページ情報を含む `Confluence.Content` オブジェクト
    *
    * @throws {Error} ページの取得に失敗した場合
    */
-  async getPage(request: { pageId: string }): Promise<ConfluencePage> {
-    return this.callApi<ConfluencePage>("GET", `/rest/api/content/${request.pageId}`);
+  async getPage(request: { pageId: string }): Promise<Confluence.Content> {
+    return this.callApi<Confluence.Content>("GET", `/rest/api/content/${request.pageId}`);
   }
 
   /**
@@ -102,12 +102,12 @@ export default class ConfluenceClient extends HttpClient {
    * @param {Object} request - 検索クエリを含むオブジェクト。
    * @param {string} request.query - Confluence Query Language（CQL）を使用した検索クエリ文字列。
    *
-   * @returns 検索結果を含む `ConfluencePage` オブジェクトの Promise。
+   * @returns 検索結果を含む `Confluence.SearchPage` オブジェクトの Promise。
    *
    * @throws APIリクエストに失敗した場合、エラーをスローします。```
    */
-  async getSearchPage(request: { query: string }): Promise<ConfluencePage> {
-    return this.callApi<ConfluencePage>(
+  async getSearchPage(request: { query: string }): Promise<Confluence.SearchPage> {
+    return this.callApi<Confluence.SearchPage>(
       "GET",
       `/rest/api/content/search?cql=type=page AND space=${this.spaceKey} AND ${request.query}`,
     );
