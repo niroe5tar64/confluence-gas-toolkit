@@ -11,17 +11,23 @@ import HttpClient from "./http-client";
 export default class ConfluenceClient extends HttpClient {
   private baseUrl: string;
   private token: string;
+  private spaceKey: string;
+  private rootPageId: string;
 
   /**
    * Confluence クライアントのインスタンスを作成する。
    *
    * @param {string} baseUrl - Confluence API のベース URL (例: `"https://your-domain.atlassian.net/wiki"`)
    * @param {string} token - API リクエストに使用する Bearer トークン
+   * @param {string} spaceKey - 対象となる Confluence の Space Key
+   * @param {string} rootPageId - 対象となる Confluence Page の ID
    */
-  constructor(baseUrl: string, token: string) {
+  constructor(baseUrl: string, token: string, spaceKey: string, rootPageId: string) {
     super();
     this.baseUrl = baseUrl;
     this.token = token;
+    this.spaceKey = spaceKey;
+    this.rootPageId = rootPageId;
   }
 
   /**
@@ -85,5 +91,25 @@ export default class ConfluenceClient extends HttpClient {
    */
   async getPage(request: { pageId: string }): Promise<ConfluencePage> {
     return this.callApi<ConfluencePage>("GET", `/rest/api/content/${request.pageId}`);
+  }
+
+  /**
+   * 指定された検索クエリを使用して、Confluenceページを検索します。
+   *
+   * Confluence API の検索エンドポイントに GET リクエストを送信し、
+   * クエリに一致するページを取得します。
+   *
+   * @param {Object} request - 検索クエリを含むオブジェクト。
+   * @param {string} request.query - Confluence Query Language（CQL）を使用した検索クエリ文字列。
+   *
+   * @returns 検索結果を含む `ConfluencePage` オブジェクトの Promise。
+   *
+   * @throws APIリクエストに失敗した場合、エラーをスローします。```
+   */
+  async getSearchPage(request: { query: string }): Promise<ConfluencePage> {
+    return this.callApi<ConfluencePage>(
+      "GET",
+      `/rest/api/content/search?cql=type=page AND space=${this.spaceKey} AND ${request.query}`,
+    );
   }
 }
