@@ -1,6 +1,6 @@
 import { build as buildUsingVite } from "vite";
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 import { ensureDirSync } from "fs-extra";
 
 const build = async (filename: string, name: string) => {
@@ -8,12 +8,15 @@ const build = async (filename: string, name: string) => {
     root: process.cwd(),
     build: {
       write: false,
-      minify: false,
+      minify: process.env.MINIFY === "true", // 環境変数に指定可能
       lib: {
         entry: filename,
         name,
         formats: ["iife"],
       },
+    },
+    define: {
+      "process.env.TARGET": JSON.stringify("GAS"), // GAS 環境としてビルド
     },
   });
   const code = Array.isArray(res) ? res[0].output[0].code : "";

@@ -1,4 +1,4 @@
-import fs from "fs";
+import fs from "node:fs";
 
 const prepareClaspJson = async () => {
   const prod = process.argv.some((arg) => arg === "---prod");

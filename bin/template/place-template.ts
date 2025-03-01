@@ -1,4 +1,4 @@
-import fs from "fs";
+import fs from "node:fs";
 
 const replaceText = (text: string, dict: Record<string, string>) => {
   const escapeRegExp = (str: string) => {

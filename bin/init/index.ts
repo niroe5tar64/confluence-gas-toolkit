@@ -1,6 +1,6 @@
 import { question, select } from "@topcli/prompts";
 import fs from "fs-extra";
-import path from "path";
+import path from "node:path";
 import { $ } from "bun";
 import { ensureDirSync } from "fs-extra";
 
