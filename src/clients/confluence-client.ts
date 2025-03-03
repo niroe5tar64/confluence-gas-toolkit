@@ -118,8 +118,17 @@ export default class ConfluenceClient extends HttpClient {
     extraCql: string;
     option?: Confluence.SearchRequestOption;
   }): Promise<Confluence.SearchPage> {
-    const cql = `type=page AND space=${this.spaceKey} AND ${request.extraCql}`;
+    const cqlList = [
+      "type=page", // ページコンテンツのみ取得
+      `space=${this.spaceKey}`, // 対象となるスペースのページのみ取得
+      `ancestor=${this.rootPageId}`, // 監視ページ配下の全ページを対象とする
+    ];
+    if (request.extraCql) {
+      cqlList.push(request.extraCql);
+    }
+    const cql = cqlList.join(" AND ");
     const queryObject = request.option ? { ...request.option, cql } : { cql };
+
     return this.callApi<Confluence.SearchPage>(
       "GET",
       `/rest/api/content/search?${convertToQueryString(queryObject)}`,
