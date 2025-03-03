@@ -175,5 +175,5 @@ dist
 .DS_Store
 
 dist
-
+data
 .clasp*.json
