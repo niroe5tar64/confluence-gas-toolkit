@@ -12,7 +12,7 @@ export async function fetchRecentChangesService(
 ): Promise<Confluence.SearchPage> {
   const client = new ConfluenceClient(host, personalAccessToken, spaceKey, rootPageId);
   const extraCql = timestamp
-    ? `lastModified > ${timestamp} ORDER BY lastModified DESC` // 指定した日時以降に変更されたページを取得
+    ? `lastModified > '${timestamp}' ORDER BY lastModified DESC` // 指定した日時以降に変更されたページを取得
     : "lastModified > now('-15m') ORDER BY lastModified DESC"; // 日時指定がない場合は直近15分間に変更されたページを取得
 
   return await client.getSearchPage({ extraCql });
