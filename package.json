@@ -8,6 +8,7 @@
   "devDependencies": {
     "@biomejs/biome": "^1.5.2",
     "@google/clasp": "^2.4.2",
+    "@slack/webhook": "^7.0.4",
     "@topcli/prompts": "^1.8.0",
     "@types/bun": "^1.0.4",
     "@types/fs-extra": "^11.0.4",
