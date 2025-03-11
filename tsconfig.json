@@ -5,6 +5,7 @@
       "~/clients": ["src/clients"],
       "~/services": ["src/services"],
       "~/types": ["src/types"],
+      "~/use-case": ["src/use-case"],
       "~/utils": ["src/utils"],
     },
     "lib": ["ESNext"],

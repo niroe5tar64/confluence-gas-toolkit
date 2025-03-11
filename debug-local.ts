@@ -1,2 +1,2 @@
-import { debug } from "./src/index";
-debug();
+import { runScheduledNotificationJob } from "./src/index";
+runScheduledNotificationJob();

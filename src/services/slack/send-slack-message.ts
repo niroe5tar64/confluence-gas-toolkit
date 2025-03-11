@@ -4,7 +4,7 @@ import { getEnvVariable } from "~/utils";
 
 const webhookUrl = getEnvVariable("SLACK_WEBHOOK_URL") || "";
 
-export function sendSlackMessageService(payload: Slack.MessagePayload) {
+export async function sendSlackMessageService(payload: Slack.MessagePayload) {
   const client = new SlackClient(webhookUrl);
-  client.send(payload);
+  await client.send(payload);
 }
