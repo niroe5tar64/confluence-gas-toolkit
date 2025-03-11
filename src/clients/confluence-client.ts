@@ -1,5 +1,5 @@
 import type { Confluence } from "~/types";
-import { convertToQueryString } from "~/utils";
+import { toQueryString } from "~/utils";
 
 import HttpClient from "./http-client";
 
@@ -131,7 +131,7 @@ export default class ConfluenceClient extends HttpClient {
 
     return this.callApi<Confluence.SearchPage>(
       "GET",
-      `/rest/api/content/search?${convertToQueryString(queryObject)}`,
+      `/rest/api/content/search?${toQueryString(queryObject)}`,
     );
   }
 }

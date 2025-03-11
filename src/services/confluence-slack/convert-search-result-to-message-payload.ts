@@ -1,5 +1,5 @@
 import { Confluence, Slack } from "~/types";
-import { formatDateJST, getEnvVariable } from "~/utils";
+import { formatDateJST, getEnvVariable, toQueryString } from "~/utils";
 
 export function convertSearchResultToMessagePayload(
   searchResult: Confluence.SearchResult,
@@ -12,7 +12,7 @@ export function convertSearchResultToMessagePayload(
   }
 
   const pageUrl = `${baseUrl}/pages/viewpage.action?pageId=${id}`;
-  const diffQuery = new URLSearchParams({
+  const diffQuery = toQueryString({
     pageId: id,
     originalVersion: String(version.number - 1),
     revisedVersion: String(version.number),
