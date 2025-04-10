@@ -1,4 +1,5 @@
 import {
+  fetchConfluenceApiService,
   fetchRecentChangesService,
   sendSlackMessageService,
   parsePollingInfoService,
@@ -17,11 +18,20 @@ import { Confluence } from "~/types";
  */
 export async function runScheduledNotificationJob() {
   const pollingInfo = parsePollingInfoService();
+  // 引数指定した日時以降に更新されたページ一覧を取得
   const recentChangePages = await fetchRecentChangesService(pollingInfo?.timestamp);
+  let { results: searchResults, _links: links } = recentChangePages;
 
-  const baseUrl = recentChangePages._links.base;
-  recentChangePages.results.map(async (result: Confluence.SearchResult) => {
-    const payload = convertSearchResultToMessagePayloadService(result, baseUrl);
+  // 一度に取得できない場合は、ループして取得
+  let nextEndpoint = links.next;
+  while (nextEndpoint) {
+    const nextPages = await fetchConfluenceApiService<Confluence.SearchPage>(nextEndpoint);
+    searchResults = [...searchResults, ...nextPages.results];
+    nextEndpoint = nextPages._links.next;
+  }
+
+  searchResults.map(async (result: Confluence.SearchResult) => {
+    const payload = convertSearchResultToMessagePayloadService(result, links.base);
     await sendSlackMessageService(payload);
   });
   updatePollingInfoService();

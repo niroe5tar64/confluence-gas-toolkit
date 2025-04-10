@@ -76,7 +76,7 @@ export default class ConfluenceClient extends HttpClient {
    *
    * @throws {Error} API リクエストに失敗した場合
    */
-  private async callApi<T>(
+  async callApi<T>(
     method: "GET" | "POST" | "PUT" | "DELETE",
     endpoint: string,
     requestBody?: string | Record<string, string | number | boolean> | Blob,

@@ -2,6 +2,22 @@ import { ConfluenceClient } from "~/clients";
 import { Confluence } from "~/types";
 
 /**
+ * Confluence API を呼び出す汎用サービス関数。
+ *
+ * 指定されたエンドポイントに対して GET リクエストを送信し、レスポンスを型指定されたデータとして返します。
+ *
+ * @template T - レスポンスデータの型。
+ * @param {string} endpoint - 呼び出す Confluence API のエンドポイント。
+ * @returns {Promise<T>} - 型指定されたレスポンスデータを含む Promise。
+ *
+ * @throws {Error} - API リクエストに失敗した場合にエラーをスローします。
+ */
+export async function fetchConfluenceApiService<T>(endpoint: string): Promise<T> {
+  const client = ConfluenceClient.getInstance();
+  return client.callApi<Promise<T>>("GET", endpoint);
+}
+
+/**
  * Confluence の最近変更されたページを取得するサービス関数。
  *
  * 指定されたタイムスタンプ以降に変更されたページを取得します。
@@ -11,8 +27,7 @@ import { Confluence } from "~/types";
  *                                      指定しない場合は直近15分間が対象となります。
  * @returns {Promise<Confluence.SearchPage>} - 検索結果を含む `Confluence.SearchPage` オブジェクト。
  *
- * @throws {Error} - 必要な環境変数 (`CONFLUENCE_URL`, `CONFLUENCE_PAT`, `SPACE_KEY`, `ROOT_PAGE_ID`) が
- *                   設定されていない場合や、API リクエストに失敗した場合にエラーをスローします。
+ * @throws {Error} - API リクエストに失敗した場合にエラーをスローします。
  */
 export async function fetchRecentChangesService(
   timestamp?: string | null,
