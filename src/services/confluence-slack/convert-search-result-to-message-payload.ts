@@ -1,6 +1,16 @@
 import { Confluence, Slack } from "~/types";
 import { formatDateJST, getEnvVariable, toQueryString } from "~/utils";
 
+/**
+ * Confluence の検索結果を元に Slack メッセージのペイロードを生成する関数。
+ *
+ * 検索結果のページ情報を基に、Slack に送信可能なメッセージ形式に変換します。
+ * ページのタイトル、更新者、更新日時、差分リンクなどを含むメッセージを生成します。
+ *
+ * @param {Confluence.SearchResult} searchResult - Confluence の検索結果オブジェクト。
+ * @param {string} baseUrl - Confluence のベース URL。
+ * @returns {Slack.MessagePayload} - Slack に送信可能なメッセージペイロード。
+ */
 export function convertSearchResultToMessagePayload(
   searchResult: Confluence.SearchResult,
   baseUrl: string,
