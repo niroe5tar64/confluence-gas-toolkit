@@ -1,8 +1,5 @@
 import { Slack } from "src/types/slack";
 import { SlackClient } from "~/clients";
-import { getEnvVariable } from "~/utils";
-
-const webhookUrl = getEnvVariable("SLACK_WEBHOOK_URL") || "";
 
 /**
  * Slack にメッセージを送信するサービス関数。
@@ -32,6 +29,6 @@ const webhookUrl = getEnvVariable("SLACK_WEBHOOK_URL") || "";
  * ```
  */
 export async function sendSlackMessageService(payload: Slack.MessagePayload) {
-  const client = new SlackClient(webhookUrl);
+  const client = SlackClient.getInstance();
   await client.send(payload);
 }
