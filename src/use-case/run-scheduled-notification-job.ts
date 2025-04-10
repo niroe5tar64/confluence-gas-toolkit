@@ -3,7 +3,7 @@ import {
   sendSlackMessageService,
   parsePollingInfoService,
   updatePollingInfoService,
-  convertSearchResultToMessagePayload,
+  convertSearchResultToMessagePayloadService,
 } from "~/services";
 import { Confluence } from "~/types";
 
@@ -21,7 +21,7 @@ export async function runScheduledNotificationJob() {
 
   const baseUrl = recentChangePages._links.base;
   recentChangePages.results.map(async (result: Confluence.SearchResult) => {
-    const payload = convertSearchResultToMessagePayload(result, baseUrl);
+    const payload = convertSearchResultToMessagePayloadService(result, baseUrl);
     await sendSlackMessageService(payload);
   });
   updatePollingInfoService();
