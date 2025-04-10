@@ -1,5 +1,5 @@
 import type { Confluence } from "~/types";
-import { toQueryString } from "~/utils";
+import { toQueryString, getEnvVariable } from "~/utils";
 
 import HttpClient from "./http-client";
 
@@ -11,6 +11,8 @@ import HttpClient from "./http-client";
  * Node.js / Bun 環境では `fetch()` を使用して API にアクセスする。
  */
 export default class ConfluenceClient extends HttpClient {
+  private static instance: ConfluenceClient | null = null;
+
   private baseUrl: string;
   private token: string;
   private spaceKey: string;
@@ -24,12 +26,35 @@ export default class ConfluenceClient extends HttpClient {
    * @param {string} spaceKey - 対象となる Confluence の Space Key
    * @param {string} rootPageId - 対象となる Confluence Page の ID
    */
-  constructor(baseUrl: string, token: string, spaceKey: string, rootPageId: string) {
+  private constructor(baseUrl: string, token: string, spaceKey: string, rootPageId: string) {
     super();
     this.baseUrl = baseUrl;
     this.token = token;
     this.spaceKey = spaceKey;
     this.rootPageId = rootPageId;
+  }
+
+  /**
+   * ConfluenceClient のシングルトンインスタンスを取得する。
+   *
+   * 初回呼び出し時にインスタンスを生成し、以降は同じインスタンスを返す。
+   * 環境変数から必要な設定値を取得してインスタンスを初期化する。
+   *
+   * @returns {ConfluenceClient} ConfluenceClient のシングルトンインスタンス
+   * @throws {Error} 環境変数が正しく設定されていない場合にスローされる
+   */
+  public static getInstance(): ConfluenceClient {
+    if (!ConfluenceClient.instance) {
+      const baseUrl = getEnvVariable("CONFLUENCE_URL") || "";
+      const token = getEnvVariable("CONFLUENCE_PAT") || "";
+      const spaceKey = getEnvVariable("SPACE_KEY") || "";
+      const rootPageId = getEnvVariable("ROOT_PAGE_ID") || "";
+      if (!baseUrl || !token || !spaceKey || !rootPageId) {
+        throw new Error("環境変数が正しく設定されていません。");
+      }
+      ConfluenceClient.instance = new ConfluenceClient(baseUrl, token, spaceKey, rootPageId);
+    }
+    return ConfluenceClient.instance;
   }
 
   /**
