@@ -12,7 +12,7 @@ import { Confluence } from "~/types";
  *
  * @throws {Error} - API リクエストに失敗した場合にエラーをスローします。
  */
-export async function fetchConfluenceApiService<T>(endpoint: string): Promise<T> {
+export async function fetchConfluenceApi<T>(endpoint: string): Promise<T> {
   const client = ConfluenceClient.getInstance();
   return client.callApi<Promise<T>>("GET", endpoint);
 }
@@ -29,7 +29,7 @@ export async function fetchConfluenceApiService<T>(endpoint: string): Promise<T>
  *
  * @throws {Error} - API リクエストに失敗した場合にエラーをスローします。
  */
-export async function fetchRecentChangesService(
+export async function fetchRecentChanges(
   timestamp?: string | null,
 ): Promise<Confluence.SearchPage> {
   const client = ConfluenceClient.getInstance();

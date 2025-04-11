@@ -1,10 +1,10 @@
 import {
-  fetchConfluenceApiService,
-  fetchRecentChangesService,
-  sendSlackMessageService,
-  parsePollingInfoService,
-  updatePollingInfoService,
-  convertSearchResultToMessagePayloadService,
+  fetchConfluenceApi,
+  fetchRecentChanges,
+  sendSlackMessage,
+  parsePollingInfo,
+  updatePollingInfo,
+  convertSearchResultToMessagePayload,
 } from "~/services";
 import { Confluence } from "~/types";
 
@@ -17,22 +17,22 @@ import { Confluence } from "~/types";
  * @returns {Promise<void>} 処理が完了したら解決される Promise
  */
 export async function runScheduledNotificationJob() {
-  const pollingInfo = parsePollingInfoService();
+  const pollingInfo = parsePollingInfo();
   // 引数指定した日時以降に更新されたページ一覧を取得
-  const recentChangePages = await fetchRecentChangesService(pollingInfo?.timestamp);
+  const recentChangePages = await fetchRecentChanges(pollingInfo?.timestamp);
   let { results: searchResults, _links: links } = recentChangePages;
 
   // 一度に取得できない場合は、ループして取得
   let nextEndpoint = links.next;
   while (nextEndpoint) {
-    const nextPages = await fetchConfluenceApiService<Confluence.SearchPage>(nextEndpoint);
+    const nextPages = await fetchConfluenceApi<Confluence.SearchPage>(nextEndpoint);
     searchResults = [...searchResults, ...nextPages.results];
     nextEndpoint = nextPages._links.next;
   }
 
   searchResults.map(async (result: Confluence.SearchResult) => {
-    const payload = convertSearchResultToMessagePayloadService(result, links.base);
-    await sendSlackMessageService(payload);
+    const payload = convertSearchResultToMessagePayload(result, links.base);
+    await sendSlackMessage(payload);
   });
-  updatePollingInfoService();
+  updatePollingInfo();
 }

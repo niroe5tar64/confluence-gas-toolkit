@@ -11,7 +11,7 @@ import { formatDateJST, getEnvVariable, toQueryString } from "~/utils";
  * @param {string} baseUrl - Confluence のベース URL。
  * @returns {Slack.MessagePayload} - Slack に送信可能なメッセージペイロード。
  */
-export function convertSearchResultToMessagePayloadService(
+export function convertSearchResultToMessagePayload(
   searchResult: Confluence.SearchResult,
   baseUrl: string,
 ): Slack.MessagePayload {

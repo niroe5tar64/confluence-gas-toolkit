@@ -25,10 +25,10 @@ import { SlackClient } from "~/clients";
  *     },
  *   ],
  * };
- * await sendSlackMessageService(payload);
+ * await sendSlackMessage(payload);
  * ```
  */
-export async function sendSlackMessageService(payload: Slack.MessagePayload) {
+export async function sendSlackMessage(payload: Slack.MessagePayload) {
   const client = SlackClient.getInstance();
   await client.send(payload);
 }
