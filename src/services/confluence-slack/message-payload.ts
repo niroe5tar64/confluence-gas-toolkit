@@ -21,22 +21,41 @@ export function convertSearchResultToMessagePayload(
     return { blocks: [] };
   }
 
-  const pageUrl = `${baseUrl}/pages/viewpage.action?pageId=${id}`;
   const diffQuery = toQueryString({
     pageId: id,
     originalVersion: String(version.number - 1),
     revisedVersion: String(version.number),
   });
-  const diffUrl = `${baseUrl}/pages/diffpagesbyversion.action?${diffQuery}`;
-  const updatedAt = formatDateJST(version.when);
 
+  return createSlackMessagePayload({
+    messageTitle: getEnvVariable("SLACK_HEADER_TEXT") || "Confluence-Slack通知",
+    pageTitle: title,
+    pageUrl: `${baseUrl}/pages/viewpage.action?pageId=${id}`,
+    diffUrl: `${baseUrl}/pages/diffpagesbyversion.action?${diffQuery}`,
+    updatedBy: version.by.displayName,
+    updatedAt: formatDateJST(version.when),
+  });
+}
+
+/** 以降はプライベートな定義群 */
+interface SlackMessagePayloadArgs {
+  messageTitle: string;
+  pageTitle: string;
+  pageUrl: string;
+  diffUrl: string;
+  updatedBy: string;
+  updatedAt: string;
+}
+
+function createSlackMessagePayload(args: SlackMessagePayloadArgs): Slack.MessagePayload {
+  const { messageTitle, pageTitle, pageUrl, diffUrl, updatedBy, updatedAt } = args;
   return {
     blocks: [
       {
         type: "header",
         text: {
           type: "plain_text",
-          text: getEnvVariable("SLACK_HEADER_TEXT") || "Confluence-Slack通知",
+          text: messageTitle,
         },
       },
       {
@@ -44,11 +63,11 @@ export function convertSearchResultToMessagePayload(
         fields: [
           {
             type: "mrkdwn",
-            text: `*Page:*\n<${pageUrl}|${title}> (<${diffUrl}|diff>)`,
+            text: `*Page:*\n<${pageUrl}|${pageTitle}> (<${diffUrl}|diff>)`,
           },
           {
             type: "mrkdwn",
-            text: `*Updated by:* ${version.by.displayName}\n*Updated at:* ${updatedAt}`,
+            text: `*Updated by:* ${updatedBy}\n*Updated at:* ${updatedAt}`,
           },
         ],
       },
