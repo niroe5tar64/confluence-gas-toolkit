@@ -96,7 +96,9 @@ export default class ConfluenceClient extends HttpClient {
 
     try {
       const response = await this.httpRequest(`${this.baseUrl}${endpoint}`, options);
-      return this.responseToJson(response) as T;
+      const json = await this.responseToJson(response);
+
+      return this.deepTransform(json) as T;
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error("Fetch failed:", error.message);
@@ -117,7 +119,7 @@ export default class ConfluenceClient extends HttpClient {
    * @throws {Error} ページの取得に失敗した場合
    */
   async getPage(request: { pageId: string }): Promise<Confluence.Content> {
-    return this.callApi<Confluence.Content>("GET", `/rest/api/content/${request.pageId}`);
+    return await this.callApi<Confluence.Content>("GET", `/rest/api/content/${request.pageId}`);
   }
 
   /**
@@ -154,7 +156,7 @@ export default class ConfluenceClient extends HttpClient {
     const cql = cqlList.join(" AND ");
     const queryObject = request.option ? { ...request.option, cql } : { cql };
 
-    return this.callApi<Confluence.SearchPage>(
+    return await this.callApi<Confluence.SearchPage>(
       "GET",
       `/rest/api/content/search?${toQueryString(queryObject)}`,
     );

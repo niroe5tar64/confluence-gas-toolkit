@@ -72,4 +72,66 @@ export default class HttpClient {
     // GAS 環境 (`GoogleAppsScript.URL_Fetch.HTTPResponse`)
     return JSON.parse(response.getContentText());
   }
+
+  /**
+   * 再帰的に入力データを解析し、特定の条件に基づいて値を変換する関数。
+   *
+   * 現在の実装では、ISO 8601 形式の日時文字列を `Date` 型に変換します。
+   * 配列やオブジェクトを再帰的に処理し、ネストされたデータ構造にも対応しています。
+   *
+   * - ISO 8601 形式の日時文字列: `2025-03-11T13:09:27.551+09:00` のような文字列を `Date` 型に変換します。
+   * - 無効な日時文字列の場合は、元の文字列をそのまま返します。
+   * - 配列やオブジェクト内の値も再帰的に処理します。
+   *
+   * @template T - 入力データの型
+   * @param {T} input - 変換対象のデータ。文字列、配列、オブジェクト、またはその他の型を受け付けます。
+   * @returns {T} 変換後のデータ。元の構造を維持しつつ、必要な値が変換されたデータを返します。
+   *
+   * @example
+   * // ISO 8601 形式の日時文字列を含むオブジェクトを変換
+   * const input = {
+   *   date: "2025-03-11T13:09:27.551+09:00",
+   *   nested: {
+   *     dates: ["2025-03-11T13:09:27.551+09:00", "invalid-date"],
+   *   },
+   * };
+   * const output = deepTransform(input);
+   * console.log(output.date instanceof Date); // true
+   * console.log(output.nested.dates[0] instanceof Date); // true
+   * console.log(output.nested.dates[1]); // "invalid-date"
+   */
+  protected deepTransform<T>(input: T): T {
+    if (input === null || input === undefined) {
+      return input;
+    }
+
+    // ISO 8601 形式の日時文字列を判定する正規表現
+    const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+
+    if (typeof input === "string" && iso8601Regex.test(input)) {
+      // ISO 8601 形式の文字列を Date 型に変換
+      const date = new Date(input);
+      // Date が無効な場合は元の文字列を返す
+      return Number.isNaN(date.getTime()) ? (input as unknown as T) : (date as unknown as T);
+    }
+
+    if (Array.isArray(input)) {
+      // 配列の場合、各要素を再帰的に処理
+      return input.map((item) => this.deepTransform(item)) as unknown as T;
+    }
+
+    if (typeof input === "object") {
+      // オブジェクトの場合、各プロパティを再帰的に処理
+      const convertedObj: Record<string, unknown> = {};
+      for (const key in input) {
+        if (Object.prototype.hasOwnProperty.call(input, key)) {
+          convertedObj[key] = this.deepTransform((input as Record<string, unknown>)[key]);
+        }
+      }
+      return convertedObj as T;
+    }
+
+    // その他の型はそのまま返す
+    return input;
+  }
 }
