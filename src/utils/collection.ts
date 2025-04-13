@@ -19,6 +19,10 @@ export function groupByKey<T>(
   items: T[],
   getKey: (item: T) => string | number,
 ): Record<string, T[]> {
+  if (!Array.isArray(items)) {
+    throw new TypeError("items must be an array");
+  }
+
   return items.reduce<Record<string, T[]>>(
     (grouped, item) => {
       // 各要素からグルーピング用のキーを取り出して文字列に変換（Recordのキーとして使うため）
@@ -66,6 +70,10 @@ export function multiSortBy<T>(
     order: "asc" | "desc";
   }>,
 ): T[] {
+  if (!Array.isArray(items)) {
+    throw new TypeError("items must be an array");
+  }
+
   return [...items].sort((a, b) => {
     for (const { getValue, order } of sortKeys) {
       const aRaw = getValue(a);

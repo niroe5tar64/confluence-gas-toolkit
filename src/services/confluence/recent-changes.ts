@@ -1,4 +1,5 @@
 import { ConfluenceClient } from "~/clients";
+import { formatDateJST } from "~/utils";
 import { Confluence } from "~/types";
 
 /**
@@ -21,21 +22,15 @@ export async function fetchConfluenceApi<T>(endpoint: string): Promise<T> {
  * Confluence の最近変更されたページを取得するサービス関数。
  *
  * 指定されたタイムスタンプ以降に変更されたページを取得します。
- * タイムスタンプが指定されない場合は、直近15分間に変更されたページを取得します。
  *
- * @param {string | null} [timestamp] - 変更されたページを取得する基準となるタイムスタンプで"YYYY/MM/DD hh:mm"形式の文字列で指定します。
- *                                      指定しない場合は直近15分間が対象となります。
+ * @param {string} [timestamp] - 変更されたページを取得する基準となるタイムスタンプで"YYYY/MM/DD hh:mm"形式の文字列で指定します。
  * @returns {Promise<Confluence.SearchPage>} - 検索結果を含む `Confluence.SearchPage` オブジェクト。
  *
  * @throws {Error} - API リクエストに失敗した場合にエラーをスローします。
  */
-export async function fetchRecentChanges(
-  timestamp?: string | null,
-): Promise<Confluence.SearchPage> {
+export async function fetchRecentChanges(timestamp: string): Promise<Confluence.SearchPage> {
   const client = ConfluenceClient.getInstance();
-  const extraCql = timestamp
-    ? `lastModified > '${timestamp}' ORDER BY lastModified DESC` // 指定した日時以降に変更されたページを取得
-    : "lastModified > now('-15m') ORDER BY lastModified DESC"; // 日時指定がない場合は直近15分間に変更されたページを取得
+  const extraCql = `lastModified > '${formatDateJST(timestamp)}' ORDER BY lastModified DESC`; // 指定した日時以降に変更されたページを取得
 
   return await client.getSearchPage({ extraCql, option: { expand: "history,version" } });
 }
