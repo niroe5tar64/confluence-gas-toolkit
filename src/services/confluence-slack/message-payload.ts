@@ -17,26 +17,44 @@ export function convertSearchResultToMessagePayload(
 ): Slack.MessagePayload {
   const { id, title, version } = searchResult;
 
-  if (!version || version.number < 2) {
-    return { blocks: [] };
-  }
+  const diffQuery =
+    version && version.number > 1
+      ? toQueryString({
+          pageId: id,
+          originalVersion: String(version.number - 1),
+          revisedVersion: String(version.number),
+        })
+      : undefined;
 
-  const pageUrl = `${baseUrl}/pages/viewpage.action?pageId=${id}`;
-  const diffQuery = toQueryString({
-    pageId: id,
-    originalVersion: String(version.number - 1),
-    revisedVersion: String(version.number),
+  return createSlackMessagePayload({
+    messageTitle: getEnvVariable("SLACK_HEADER_TEXT") ?? "Confluence-Slack通知",
+    pageTitle: title,
+    pageUrl: `${baseUrl}/pages/viewpage.action?pageId=${id}`,
+    diffUrl: diffQuery ? `${baseUrl}/pages/diffpagesbyversion.action?${diffQuery}` : undefined,
+    updatedBy: version?.by.displayName,
+    updatedAt: version?.when ? formatDateJST(version.when) : undefined,
   });
-  const diffUrl = `${baseUrl}/pages/diffpagesbyversion.action?${diffQuery}`;
-  const updatedAt = formatDateJST(version.when);
+}
 
+/** 以降はプライベートな定義群 */
+interface SlackMessagePayloadArgs {
+  messageTitle: string;
+  pageTitle: string;
+  pageUrl: string;
+  diffUrl?: string;
+  updatedBy?: string;
+  updatedAt?: string;
+}
+
+function createSlackMessagePayload(args: SlackMessagePayloadArgs): Slack.MessagePayload {
+  const { messageTitle, pageTitle, pageUrl, diffUrl, updatedBy, updatedAt } = args;
   return {
     blocks: [
       {
         type: "header",
         text: {
           type: "plain_text",
-          text: getEnvVariable("SLACK_HEADER_TEXT") || "Confluence-Slack通知",
+          text: messageTitle,
         },
       },
       {
@@ -44,11 +62,13 @@ export function convertSearchResultToMessagePayload(
         fields: [
           {
             type: "mrkdwn",
-            text: `*Page:*\n<${pageUrl}|${title}> (<${diffUrl}|diff>)`,
+            text: diffUrl
+              ? `*Page:*\n<${pageUrl}|${pageTitle}> (<${diffUrl}|diff>)`
+              : `*Page:*\n<${pageUrl}|${pageTitle}>`,
           },
           {
             type: "mrkdwn",
-            text: `*Updated by:* ${version.by.displayName}\n*Updated at:* ${updatedAt}`,
+            text: `*Updated by:* ${updatedBy ?? "不明"}\n*Updated at:* ${updatedAt ?? "不明"}`,
           },
         ],
       },
