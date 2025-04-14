@@ -1,6 +1,7 @@
 import {
   fetchConfluenceApi,
   fetchRecentChanges,
+  isAvailableJob,
   sendSlackMessage,
   parsePollingInfo,
   updatePollingInfo,
@@ -18,6 +19,11 @@ import { Confluence } from "~/types";
  * @returns {Promise<void>} 処理が完了したら解決される Promise
  */
 export async function confluenceUpdateNotifyJob() {
+  if (!isAvailableJob("confluenceUpdateNotifyJob")) {
+    console.log("'confluenceUpdateNotifyJob' は実行可能な時間ではないので、処理を中断しました。");
+    return;
+  }
+
   // 前回実行時のタイムスタンプを読み取る（存在しない or 日時が無効な場合は15分前）
   const pollingInfo = parsePollingInfo();
   const timestampISOString =
