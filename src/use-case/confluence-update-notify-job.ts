@@ -17,7 +17,7 @@ import { Confluence } from "~/types";
  *
  * @returns {Promise<void>} 処理が完了したら解決される Promise
  */
-export async function runScheduledNotificationJob() {
+export async function confluenceUpdateNotifyJob() {
   // 前回実行時のタイムスタンプを読み取る（存在しない or 日時が無効な場合は15分前）
   const pollingInfo = parsePollingInfo();
   const timestampISOString =

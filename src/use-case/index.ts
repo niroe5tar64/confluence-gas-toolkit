@@ -1,1 +1,1 @@
-export * from "./run-scheduled-notification-job";
+export * from "./confluence-update-notify-job";

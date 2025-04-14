@@ -1,2 +1,2 @@
-import { runScheduledNotificationJob } from "./src/index";
-runScheduledNotificationJob();
+import { confluenceUpdateNotifyJob } from "./src/index";
+confluenceUpdateNotifyJob();
