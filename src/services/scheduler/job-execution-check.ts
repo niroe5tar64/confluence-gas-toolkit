@@ -1,8 +1,6 @@
-import { JobExecutableCondition } from "~/types";
+import { JobName, JobExecutableCondition } from "~/types";
 
 import { jobExecutionPolicy } from "./job-schedule-config";
-
-type JobName = "confluenceUpdateNotifyJob";
 
 /**
  * 指定されたジョブが現在の日時に実行可能かどうかを判定する関数。
