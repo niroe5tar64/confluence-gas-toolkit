@@ -32,5 +32,18 @@ export async function fetchRecentChanges(timestamp: string): Promise<Confluence.
   const client = ConfluenceClient.getInstance();
   const extraCql = `lastModified > '${formatDateJST(timestamp)}' ORDER BY lastModified DESC`; // 指定した日時以降に変更されたページを取得
 
-  return await client.getSearchPage({ extraCql, option: { expand: "history,version" } });
+  const searchPages = await client.getSearchPage({
+    extraCql,
+    option: { expand: "history,version" },
+  });
+  // 検索結果が複数ページに渡る場合、すべてのページをループで取得する
+  let searchResults = searchPages.results;
+  let nextEndpoint = searchPages._links?.next;
+  while (nextEndpoint) {
+    const nextPages = await fetchConfluenceApi<Confluence.SearchPage>(nextEndpoint);
+    // 結果を蓄積
+    searchResults = [...searchResults, ...nextPages.results];
+    nextEndpoint = nextPages._links.next;
+  }
+  return { ...searchPages, results: searchResults };
 }

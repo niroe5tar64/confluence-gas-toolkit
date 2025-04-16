@@ -45,27 +45,17 @@ async function executeMainProcess() {
 
   // タイムスタンプ以降に更新されたページ一覧を取得（最大 limit 件まで）
   const recentChangePages = await fetchRecentChanges(timestampISOString);
-  let { results: searchResults, _links: links } = recentChangePages;
-
-  // 検索結果が複数ページに渡る場合、すべてのページをループで取得する
-  let nextEndpoint = links?.next;
-  while (nextEndpoint) {
-    const nextPages = await fetchConfluenceApi<Confluence.SearchPage>(nextEndpoint);
-    // 結果を蓄積
-    searchResults = [...searchResults, ...nextPages.results];
-    nextEndpoint = nextPages._links.next;
-  }
 
   // Confluence API から取得した検索結果を時系列順に並べ替え、
   // 各結果を Slack メッセージのペイロードに変換して送信します。
-  const sortedSearchResults = sortSearchResultsByUpdatedAtAsc(searchResults);
+  const sortedSearchResults = sortSearchResultsByUpdatedAtAsc(recentChangePages.results);
   sortedSearchResults.map(async (result: Confluence.SearchResult) => {
-    const payload = convertSearchResultToMessagePayload(result, links.base);
+    const payload = convertSearchResultToMessagePayload(result, recentChangePages._links.base);
     await sendSlackMessage(payload);
   });
 
   // 最も最近の更新日時を特定し次回以降の差分取得に備えてタイムスタンプを保存する
-  const updatedAtList: Date[] = searchResults
+  const updatedAtList: Date[] = recentChangePages.results
     .map((result) => result.version)
     .map((version) => version?.when)
     .filter((when) => when !== undefined);
