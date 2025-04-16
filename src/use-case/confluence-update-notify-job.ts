@@ -36,7 +36,7 @@ export async function confluenceUpdateNotifyJob() {
 }
 
 async function executeMainProcess() {
-  // 前回実行時のタイムスタンプを読み取る（存在しない or 日時が無効な場合は15分前）
+  // 前回実行時のタイムスタンプを読み取る（存在しない場合 or 日時が無効な場合は15分前）
   const pollingInfo = parsePollingInfo();
   const timestampISOString =
     pollingInfo?.timestamp && !Number.isNaN(new Date(pollingInfo?.timestamp))
