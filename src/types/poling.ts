@@ -1,3 +1,7 @@
+export type PollingInfoFileName =
+  | "confluence-update-notify-job.json"
+  | "confluence-summary-job.json";
+
 export interface PollingInfo {
   timestamp: string;
 }

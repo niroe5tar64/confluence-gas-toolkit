@@ -37,7 +37,7 @@ export async function confluenceUpdateNotifyJob() {
 
 async function executeMainProcess() {
   // 前回実行時のタイムスタンプを読み取る（存在しない場合 or 日時が無効な場合は15分前）
-  const pollingInfo = parsePollingInfo();
+  const pollingInfo = parsePollingInfo("confluence-update-notify-job.json");
   const timestampISOString =
     pollingInfo?.timestamp && !Number.isNaN(new Date(pollingInfo?.timestamp))
       ? pollingInfo?.timestamp
@@ -71,10 +71,11 @@ async function executeMainProcess() {
     .filter((when) => when !== undefined);
   const latestUpdatedAt = new Date(Math.max(...updatedAtList.map((date) => date.getTime())));
 
-  updatePollingInfo({
+  const updatedPollingInfo = {
     ...(pollingInfo ?? {}),
     timestamp: Number.isNaN(latestUpdatedAt.getTime())
       ? timestampISOString
       : latestUpdatedAt.toISOString(),
-  });
+  };
+  updatePollingInfo(updatedPollingInfo, "confluence-update-notify-job.json");
 }
