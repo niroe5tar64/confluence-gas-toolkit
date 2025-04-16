@@ -1,7 +1,7 @@
 import {
   fetchConfluenceApi,
   fetchRecentChanges,
-  isAvailableJob,
+  isJobExecutionAllowed,
   sendSlackMessage,
   parsePollingInfo,
   updatePollingInfo,
@@ -21,7 +21,7 @@ import { Confluence } from "~/types";
  */
 export async function confluenceUpdateNotifyJob() {
   // 実行可能な時間帯でない場合は、処理を中断します。
-  if (!isAvailableJob("confluenceUpdateNotifyJob")) {
+  if (!isJobExecutionAllowed("confluenceUpdateNotifyJob")) {
     console.log("'confluenceUpdateNotifyJob' は実行可能な時間ではないので、処理を中断しました。");
     return;
   }

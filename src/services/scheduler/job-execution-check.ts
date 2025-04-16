@@ -13,13 +13,13 @@ import { jobExecutionPolicy } from "./job-schedule-config";
  * @returns {boolean} - ジョブが現在の日時に実行可能であれば `true`、そうでなければ `false`。
  *
  * @example
- * if (isAvailableJob("confluenceUpdateNotifyJob")) {
+ * if (isJobExecutionAllowed("confluenceUpdateNotifyJob")) {
  *   console.log("ジョブを実行可能です。");
  * } else {
  *   console.log("現在はジョブを実行できません。");
  * }
  */
-export function isAvailableJob(jobName: JobName) {
+export function isJobExecutionAllowed(jobName: JobName) {
   const now = new Date();
   return jobExecutionPolicy[jobName].executableConditions.some((condition) =>
     isJobExecutionTime(now, condition),
