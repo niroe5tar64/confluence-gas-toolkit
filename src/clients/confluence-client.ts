@@ -98,6 +98,15 @@ export default class ConfluenceClient extends HttpClient {
       const response = await this.httpRequest(`${this.baseUrl}${endpoint}`, options);
       const json = await this.responseToJson(response);
 
+      // ローカル環境 (Node.js / Bun)
+      if ("status" in response && response.status >= 400) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+      // GAS 環境
+      if ("getResponseCode" in response && response.getResponseCode() >= 400) {
+        throw new Error(`HTTP Error: ${response.getResponseCode()}`);
+      }
+
       return this.deepTransform(json) as T;
     } catch (error: unknown) {
       if (error instanceof Error) {

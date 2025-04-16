@@ -7,6 +7,7 @@ import {
   updatePollingInfo,
   sortSearchResultsByUpdatedAtAsc,
   convertSearchResultToMessagePayload,
+  sendSlackException,
 } from "~/services";
 import { Confluence } from "~/types";
 
@@ -19,11 +20,22 @@ import { Confluence } from "~/types";
  * @returns {Promise<void>} 処理が完了したら解決される Promise
  */
 export async function confluenceUpdateNotifyJob() {
+  // 実行可能な時間帯でない場合は、処理を中断します。
   if (!isAvailableJob("confluenceUpdateNotifyJob")) {
     console.log("'confluenceUpdateNotifyJob' は実行可能な時間ではないので、処理を中断しました。");
     return;
   }
 
+  try {
+    await executeMainProcess();
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      await sendSlackException(error);
+    }
+  }
+}
+
+async function executeMainProcess() {
   // 前回実行時のタイムスタンプを読み取る（存在しない or 日時が無効な場合は15分前）
   const pollingInfo = parsePollingInfo();
   const timestampISOString =
