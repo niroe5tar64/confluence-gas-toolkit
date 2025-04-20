@@ -1,2 +1,3 @@
-import { confluenceUpdateNotifyJob } from "./src/index";
-confluenceUpdateNotifyJob();
+import { confluenceUpdateNotifyJob, confluenceUpdateSummaryJob } from "./src/index";
+// confluenceUpdateNotifyJob();
+// confluenceUpdateSummaryJob();
