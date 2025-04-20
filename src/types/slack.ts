@@ -1,3 +1,4 @@
+import { MrkdwnElement as SlackMrkdwnElement } from "@slack/types";
 import type { IncomingWebhookSendArguments } from "@slack/webhook";
 
 /**
@@ -11,5 +12,6 @@ import type { IncomingWebhookSendArguments } from "@slack/webhook";
  *   https://tools.slack.dev/node-slack-sdk/reference/webhook/classes/IncomingWebhook
  */
 export namespace Slack {
+  export interface MrkdwnElement extends SlackMrkdwnElement {}
   export interface MessagePayload extends IncomingWebhookSendArguments {}
 }

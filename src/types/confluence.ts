@@ -3,6 +3,7 @@ import type {
   SearchPageResponseSearchResult,
   SearchRequest,
   SearchResult as ConfluenceSearchResult,
+  Version as ConfluenceVersion,
 } from "fetch-confluence";
 
 /**
@@ -19,7 +20,7 @@ import type {
 export namespace Confluence {
   /********* Confluence API リクエスト *********/
   export interface SearchRequestOption extends Omit<SearchRequest, "cql"> {
-    expand: string;
+    expand?: string;
   }
 
   /********* Confluence API レスポンス *********/
@@ -42,4 +43,5 @@ export namespace Confluence {
   export interface SearchPage extends Omit<SearchPageResponseSearchResult, "results"> {
     results: Array<SearchResult>;
   }
+  export interface Version extends ConfluenceVersion {}
 }
