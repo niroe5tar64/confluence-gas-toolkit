@@ -1,13 +1,13 @@
 import {
-  parsePollingInfo,
+  parseJobData,
   sendSlackException,
   fetchRecentChanges,
   fetchAllPages,
-  updatePollingInfo,
+  updateJobData,
   convertSearchResultsToSummaryPayload,
   sendSlackMessage,
 } from "~/services";
-import { PollingInfoForSummaryJob } from "~/types";
+import { JobDataForSummaryJob } from "~/types";
 
 export async function confluenceUpdateSummaryJob() {
   try {
@@ -20,10 +20,10 @@ export async function confluenceUpdateSummaryJob() {
 }
 
 async function executeMainProcess() {
-  const pollingInfo = parsePollingInfo("confluence-summary-job.json") as PollingInfoForSummaryJob;
+  const jobData = parseJobData("confluence-summary-job.json") as JobDataForSummaryJob;
 
   // サマリー生成用データが存在しない場合は、初期化プロセスを実行
-  if (!pollingInfo || !pollingInfo.originalVersions) {
+  if (!jobData || !jobData.originalVersions) {
     initializeSummaryDataProcess();
     return;
   }
@@ -32,8 +32,8 @@ async function executeMainProcess() {
 
   // 前回実行時のタイムスタンプを読み取る（存在しない場合 or 日時が無効な場合は1週間前）
   const timestampISOString =
-    pollingInfo?.timestamp && !Number.isNaN(new Date(pollingInfo?.timestamp))
-      ? pollingInfo?.timestamp
+    jobData?.timestamp && !Number.isNaN(new Date(jobData?.timestamp))
+      ? jobData?.timestamp
       : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
   // タイムスタンプ以降に更新されたページ一覧を取得（最大 limit 件まで）
@@ -46,7 +46,7 @@ async function executeMainProcess() {
 
   const payload = convertSearchResultsToSummaryPayload(
     recentChangePages.results,
-    pollingInfo.originalVersions,
+    jobData.originalVersions,
     recentChangePages._links.base,
   );
 
@@ -60,11 +60,11 @@ async function executeMainProcess() {
     {} as Record<string, number>,
   );
 
-  const updatedPollingInfo = {
+  const updatedJobData = {
     timestamp,
-    originalVersions: { ...pollingInfo.originalVersions, ...latestVersions },
+    originalVersions: { ...jobData.originalVersions, ...latestVersions },
   };
-  updatePollingInfo(updatedPollingInfo, "confluence-summary-job.json");
+  updateJobData(updatedJobData, "confluence-summary-job.json");
 }
 
 // サマリー生成用データの初期化プロセス
@@ -74,7 +74,7 @@ async function initializeSummaryDataProcess() {
     pageId: result.id,
     originalVersion: result.version?.number ?? 1,
   }));
-  const pollingInfo: PollingInfoForSummaryJob = {
+  const jobData: JobDataForSummaryJob = {
     timestamp: new Date().toISOString(),
     originalVersions: pages.reduce(
       (acc, page) => {
@@ -84,6 +84,6 @@ async function initializeSummaryDataProcess() {
       {} as Record<string, number>,
     ),
   };
-  updatePollingInfo(pollingInfo, "confluence-summary-job.json");
+  updateJobData(jobData, "confluence-summary-job.json");
   console.log("サマリー生成用データを初期化しました。");
 }

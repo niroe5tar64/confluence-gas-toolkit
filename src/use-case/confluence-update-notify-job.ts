@@ -3,8 +3,8 @@ import {
   fetchRecentChanges,
   isJobExecutionAllowed,
   sendSlackMessage,
-  parsePollingInfo,
-  updatePollingInfo,
+  parseJobData,
+  updateJobData,
   sortSearchResultsByUpdatedAtAsc,
   convertSearchResultToMessagePayload,
   sendSlackException,
@@ -37,10 +37,10 @@ export async function confluenceUpdateNotifyJob() {
 
 async function executeMainProcess() {
   // 前回実行時のタイムスタンプを読み取る（存在しない場合 or 日時が無効な場合は15分前）
-  const pollingInfo = parsePollingInfo("confluence-update-notify-job.json");
+  const jobData = parseJobData("confluence-update-notify-job.json");
   const timestampISOString =
-    pollingInfo?.timestamp && !Number.isNaN(new Date(pollingInfo?.timestamp))
-      ? pollingInfo?.timestamp
+    jobData?.timestamp && !Number.isNaN(new Date(jobData?.timestamp))
+      ? jobData?.timestamp
       : new Date(Date.now() - 15 * 60 * 1000).toISOString();
 
   // タイムスタンプ以降に更新されたページ一覧を取得（最大 limit 件まで）
@@ -61,11 +61,11 @@ async function executeMainProcess() {
     .filter((when) => when !== undefined);
   const latestUpdatedAt = new Date(Math.max(...updatedAtList.map((date) => date.getTime())));
 
-  const updatedPollingInfo = {
-    ...(pollingInfo ?? {}),
+  const updatedJobData = {
+    ...(jobData ?? {}),
     timestamp: Number.isNaN(latestUpdatedAt.getTime())
       ? timestampISOString
       : latestUpdatedAt.toISOString(),
   };
-  updatePollingInfo(updatedPollingInfo, "confluence-update-notify-job.json");
+  updateJobData(updatedJobData, "confluence-update-notify-job.json");
 }
