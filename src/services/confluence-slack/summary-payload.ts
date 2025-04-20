@@ -47,7 +47,7 @@ function createUpdatedPage(
   const currentVersion = version?.number;
 
   const diffQuery =
-    version && version.number > 1
+    version && version.number > 1 && originalVersion !== currentVersion
       ? toQueryString({
           pageId: id,
           originalVersion: String(originalVersion),
@@ -85,34 +85,54 @@ function createSlackSummaryPayload(args: SlackSummaryPayloadArgs): Slack.Message
         },
       },
       {
-        type: "section",
-        text: {
-          type: "plain_text",
-          text: `今週は${args.updatedPages.length}件のページが更新されました。`,
-        },
-      },
-      {
-        type: "context",
-        elements: args.updatedPages
-          .map((updatedPage) => {
-            const { page, diff, lastUpdated } = updatedPage;
-
-            return {
-              page: diff?.url
-                ? `<${page.url}|${page.text}> (<${diff.url}|${diff.text}>)`
-                : `<${page.url}|${page.text}>`,
-              lastUpdated: {
-                by: lastUpdated.by ?? "不明",
-                at: lastUpdated.at ? formatDateJST(lastUpdated.at) : "不明",
+        type: "rich_text",
+        elements: [
+          {
+            type: "rich_text_section",
+            elements: [
+              {
+                type: "text",
+                text: `今週は${args.updatedPages.length}件のページが更新されました。`,
               },
-            };
-          })
-          .map((md) => {
-            return {
-              type: "mrkdwn",
-              text: `- ${md.page}`,
-            };
-          }) as Slack.MrkdwnElement[],
+            ],
+          },
+          {
+            type: "rich_text_list",
+            style: "bullet",
+            indent: 0,
+            elements: args.updatedPages.map((updatedPage) => {
+              const { page, diff, lastUpdated } = updatedPage;
+
+              const richTextElements: Slack.RichTextElement[] = [];
+              richTextElements.push({
+                type: "link",
+                url: page.url,
+                text: page.text,
+                style: { bold: true },
+              });
+
+              if (diff?.url) {
+                richTextElements.push({
+                  type: "link",
+                  url: diff.url,
+                  text: diff.text,
+                });
+              }
+
+              // richTextElements.push({
+              //   type: "text",
+              //   text:
+              //     `last updated at: ${lastUpdated.by ?? "不明"}` +
+              //     `last updated by: ${lastUpdated.at ? formatDateJST(lastUpdated.at) : "不明"}`,
+              // });
+
+              return {
+                type: "rich_text_section",
+                elements: richTextElements,
+              };
+            }),
+          },
+        ],
       },
     ],
   };
