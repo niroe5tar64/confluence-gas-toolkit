@@ -151,7 +151,7 @@ export default class ConfluenceClient extends HttpClient {
    * @throws {Error} APIリクエストに失敗した場合、エラーをスローします。
    */
   async getSearchPage(request: {
-    extraCql: string;
+    extraCql?: string;
     option?: Confluence.SearchRequestOption;
   }): Promise<Confluence.SearchPage> {
     const cqlList = [

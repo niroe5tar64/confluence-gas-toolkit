@@ -47,3 +47,30 @@ export async function fetchRecentChanges(timestamp: string): Promise<Confluence.
   }
   return { ...searchPages, results: searchResults };
 }
+
+/**
+ * Confluence のすべてのページを取得するサービス関数。
+ *
+ * Confluence API を使用して、すべてのページを取得します。
+ * ページが複数に分割されている場合、ページネーションを処理してすべての結果を統合します。
+ *
+ * @returns {Promise<Confluence.SearchPage>} - すべてのページを含む `Confluence.SearchPage` オブジェクト。
+ *
+ * @throws {Error} - API リクエストに失敗した場合にエラーをスローします。
+ */
+export async function fetchAllPages(): Promise<Confluence.SearchPage> {
+  const client = ConfluenceClient.getInstance();
+  const searchPages = await client.getSearchPage({
+    option: { expand: "version", limit: 100, start: 0 },
+  });
+  // 検索結果が複数ページに渡る場合、すべてのページをループで取得する
+  let searchResults = searchPages.results;
+  let nextEndpoint = searchPages._links?.next;
+  while (nextEndpoint) {
+    const nextPages = await fetchConfluenceApi<Confluence.SearchPage>(nextEndpoint);
+    // 結果を蓄積
+    searchResults = [...searchResults, ...nextPages.results];
+    nextEndpoint = nextPages._links.next;
+  }
+  return { ...searchPages, results: searchResults };
+}
