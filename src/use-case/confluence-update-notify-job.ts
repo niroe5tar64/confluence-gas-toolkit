@@ -1,5 +1,4 @@
 import {
-  fetchConfluenceApi,
   fetchRecentChanges,
   isJobExecutionAllowed,
   sendSlackMessage,
