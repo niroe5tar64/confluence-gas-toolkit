@@ -1,9 +1,10 @@
-// Bun Snapshot v1, https://goo.gl/fbAQLP
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
 
 exports[`placeTemplate replaces the template with the given dictionary 1`] = `
 "{
   "version": "0.0.1",
   "name": "sample-file",
-  "date": 1609459200000
-}"
+  "date": "1609459200000"
+}
+"
 `;

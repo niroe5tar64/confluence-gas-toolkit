@@ -8,10 +8,12 @@ describe("placeTemplate", () => {
     const __dirname = new URL(".", import.meta.url).pathname;
     const templatePath = path.resolve(__dirname, "sample-template.json");
     const targetPath = path.resolve(__dirname, "sample-target.json");
+    // タイムゾーンに依存しない UTC 日時を使用
+    const expectedTimestamp = Date.UTC(2021, 0, 1).toString();
     const dict = {
       version: "0.0.1",
       name: "sample-file",
-      date: new Date(2021, 0, 1).getTime().toString(),
+      date: expectedTimestamp,
     };
     placeTemplate(templatePath, targetPath, dict);
 
@@ -19,7 +21,7 @@ describe("placeTemplate", () => {
 
     expect(savedTarge).toContain('"0.0.1"');
     expect(savedTarge).toContain('"sample-file"');
-    expect(savedTarge).toContain("1609459200000");
+    expect(savedTarge).toContain(expectedTimestamp);
     expect(savedTarge).toMatchSnapshot();
   });
 });

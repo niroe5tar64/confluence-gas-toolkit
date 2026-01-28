@@ -45,7 +45,7 @@ export function isJobExecutionAllowed(jobName: JobName) {
  *   console.log("現在の日時は条件に一致しません。");
  * }
  */
-function isJobExecutionTime(date: Date, condition: JobExecutableCondition): boolean {
+export function isJobExecutionTime(date: Date, condition: JobExecutableCondition): boolean {
   const day = date.getDay(); // 0: 日曜 ~ 6: 土曜
   const hour = date.getHours();
   const minutes = date.getMinutes();
