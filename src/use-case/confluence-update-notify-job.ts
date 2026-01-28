@@ -1,12 +1,12 @@
 import {
+  convertSearchResultToMessagePayload,
   fetchRecentChanges,
   isJobExecutionAllowed,
-  sendSlackMessage,
   parseJobData,
-  updateJobData,
-  sortSearchResultsByUpdatedAtAsc,
-  convertSearchResultToMessagePayload,
   sendSlackException,
+  sendSlackMessage,
+  sortSearchResultsByUpdatedAtAsc,
+  updateJobData,
 } from "~/services";
 import { Confluence } from "~/types";
 
@@ -48,17 +48,23 @@ async function executeMainProcess() {
   // Confluence API から取得した検索結果を時系列順に並べ替え、
   // 各結果を Slack メッセージのペイロードに変換して送信します。
   const sortedSearchResults = sortSearchResultsByUpdatedAtAsc(recentChangePages.results);
-  sortedSearchResults.map(async (result: Confluence.SearchResult) => {
-    const payload = convertSearchResultToMessagePayload(result, recentChangePages._links.base);
-    await sendSlackMessage(payload);
-  });
+  const baseUrl = recentChangePages._links?.base || "";
+  await Promise.all(
+    sortedSearchResults.map(async (result: Confluence.SearchResult) => {
+      const payload = convertSearchResultToMessagePayload(result, baseUrl);
+      await sendSlackMessage(payload);
+    }),
+  );
 
   // 最も最近の更新日時を特定し次回以降の差分取得に備えてタイムスタンプを保存する
   const updatedAtList: Date[] = recentChangePages.results
     .map((result) => result.version)
     .map((version) => version?.when)
     .filter((when) => when !== undefined);
-  const latestUpdatedAt = new Date(Math.max(...updatedAtList.map((date) => date.getTime())));
+  const latestUpdatedAt =
+    updatedAtList.length > 0
+      ? new Date(Math.max(...updatedAtList.map((date) => date.getTime())))
+      : new Date();
 
   const updatedJobData = {
     ...(jobData ?? {}),

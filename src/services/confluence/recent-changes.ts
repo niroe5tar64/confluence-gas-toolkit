@@ -1,6 +1,6 @@
 import { ConfluenceClient } from "~/clients";
-import { formatDateJST } from "~/utils";
 import { Confluence } from "~/types";
+import { formatDateJST } from "~/utils";
 
 /**
  * Confluence API を呼び出す汎用サービス関数。
@@ -43,7 +43,7 @@ export async function fetchRecentChanges(timestamp: string): Promise<Confluence.
     const nextPages = await fetchConfluenceApi<Confluence.SearchPage>(nextEndpoint);
     // 結果を蓄積
     searchResults = [...searchResults, ...nextPages.results];
-    nextEndpoint = nextPages._links.next;
+    nextEndpoint = nextPages._links?.next;
   }
   return { ...searchPages, results: searchResults };
 }
@@ -70,7 +70,7 @@ export async function fetchAllPages(): Promise<Confluence.SearchPage> {
     const nextPages = await fetchConfluenceApi<Confluence.SearchPage>(nextEndpoint);
     // 結果を蓄積
     searchResults = [...searchResults, ...nextPages.results];
-    nextEndpoint = nextPages._links.next;
+    nextEndpoint = nextPages._links?.next;
   }
   return { ...searchPages, results: searchResults };
 }

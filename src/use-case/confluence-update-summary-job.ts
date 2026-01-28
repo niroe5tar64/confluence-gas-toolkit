@@ -1,11 +1,11 @@
 import {
+  convertSearchResultsToSummaryPayload,
+  fetchAllPages,
+  fetchRecentChanges,
   parseJobData,
   sendSlackException,
-  fetchRecentChanges,
-  fetchAllPages,
-  updateJobData,
-  convertSearchResultsToSummaryPayload,
   sendSlackMessage,
+  updateJobData,
 } from "~/services";
 import { JobDataForSummaryJob } from "~/types";
 
@@ -20,20 +20,22 @@ export async function confluenceUpdateSummaryJob() {
 }
 
 async function executeMainProcess() {
-  const jobData = parseJobData("confluence-summary-job.json") as JobDataForSummaryJob;
+  const parsedJobData = parseJobData("confluence-summary-job.json");
 
   // サマリー生成用データが存在しない場合は、初期化プロセスを実行
-  if (!jobData || !jobData.originalVersions) {
+  if (!parsedJobData || !("originalVersions" in parsedJobData)) {
     initializeSummaryDataProcess();
     return;
   }
+  const jobData = parsedJobData as JobDataForSummaryJob;
+
   // polingInfo.timestamp更新用に予め現在日時の取得しておく
   const timestamp = new Date().toISOString();
 
   // 前回実行時のタイムスタンプを読み取る（存在しない場合 or 日時が無効な場合は1週間前）
   const timestampISOString =
-    jobData?.timestamp && !Number.isNaN(new Date(jobData?.timestamp))
-      ? jobData?.timestamp
+    jobData.timestamp && !Number.isNaN(new Date(jobData.timestamp))
+      ? jobData.timestamp
       : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
   // タイムスタンプ以降に更新されたページ一覧を取得（最大 limit 件まで）
