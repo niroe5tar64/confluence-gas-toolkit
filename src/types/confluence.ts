@@ -1,47 +1,92 @@
-import type {
-  Content as ConfluenceContent,
-  SearchPageResponseSearchResult,
-  SearchRequest,
-  SearchResult as ConfluenceSearchResult,
-  Version as ConfluenceVersion,
-} from "fetch-confluence";
-
 /**
  * Confluence API に関連する型定義。
  *
  * このファイルでは、Confluence API のリクエストおよびレスポンスに関連する型を定義しています。
- * `fetch-confluence` パッケージからインポートした型を拡張またはカスタマイズすることで、
- * プロジェクト内で統一的に扱えるようにしています。
+ * 実際に使用されているプロパティのみを定義した最小限の型定義を提供します。
  *
  * 参考:
- * - fetch-confluence パッケージの型定義
- *   https://www.npmjs.com/package/fetch-confluence
+ * - Confluence REST API ドキュメント（Cloud）
+ *   https://developer.atlassian.com/cloud/confluence/rest/v2/intro/
+ * - Confluence Server/Data Center API ドキュメント
+ *   https://docs.atlassian.com/confluence/server/
  */
+
 export namespace Confluence {
-  /********* Confluence API リクエスト *********/
-  export interface SearchRequestOption extends Omit<SearchRequest, "cql"> {
+  /**
+   * Confluence API 検索リクエストのオプション
+   */
+  export interface SearchRequestOption {
+    /** 取得を開始する位置を指定するオフセット（デフォルト: 0） */
+    start?: number;
+    /** 取得する結果の最大数（デフォルト: 25） */
+    limit?: number;
+    /** 取得する追加情報を指定（カンマ区切りで複数指定可能） */
     expand?: string;
+    /** 検索クエリのコンテキスト（JSON 文字列） */
+    cqlcontext?: string;
+    [key: string]: unknown;
   }
 
-  /********* Confluence API レスポンス *********/
-  export interface Content extends ConfluenceContent {}
+  /**
+   * Confluence ページコンテンツオブジェクト
+   */
+  export interface Content {
+    /** ページの ID */
+    id: string;
+    /** ページのタイトル */
+    title: string;
+    /** コンテンツの種類（"page", "blogpost" など） */
+    type: string;
+    /** リンク情報（self, webui など） */
+    _links?: { [key: string]: string };
+    [key: string]: unknown;
+  }
 
-  export interface SearchResult extends Omit<ConfluenceSearchResult, "content">, ConfluenceContent {
-    /* 
-      Note: ConfluenceAPIのオンプレ版とクラウド版でレスポンスが異なる。
-            オンプレ版ではContentが展開されて同階層に存在しているのに対し、
-            クラウド版ではContentプロパティとして存在している。
-      
-      ※ 補足説明: `extends Omit<ConfluenceSearchResult, "content">, ConfluenceContent {}`の意味
-        const confluenceSearchResult: ConfluenceSearchResult = { ... };
-        const confluenceContent: ConfluenceContent = { ... };
-        
-        const tempObj = { ...confluenceSearchResult, ...confluenceContent };
-        const searchResult: SearchResult = Object.entries(tempObj).filter(([key]) => key !== "content");
-    */
+  /**
+   * Confluence ページのバージョン情報
+   */
+  export interface Version {
+    /** 更新者情報 */
+    by: {
+      /** 更新者の表示名 */
+      displayName: string;
+      [key: string]: unknown;
+    };
+    /** 更新日時（ISO 8601 形式） */
+    when: Date;
+    /** バージョン番号 */
+    number: number;
+    [key: string]: unknown;
   }
-  export interface SearchPage extends Omit<SearchPageResponseSearchResult, "results"> {
-    results: Array<SearchResult>;
+
+  /**
+   * Confluence 検索結果のオブジェクト
+   *
+   * Note: Confluence API のオンプレ版とクラウド版でレスポンス形式が異なる。
+   *       オンプレ版ではコンテンツプロパティが展開されて同階層に存在するのに対し、
+   *       クラウド版ではコンテンツプロパティとして存在している。
+   *       このインターフェースはオンプレ版の形式（フラット化）に対応している。
+   */
+  export interface SearchResult extends Content {
+    /** ページのバージョン情報 */
+    version?: Version;
+    [key: string]: unknown;
   }
-  export interface Version extends ConfluenceVersion {}
+
+  /**
+   * Confluence 検索結果のページ情報
+   */
+  export interface SearchPage {
+    /** 検索結果のページネーション情報 */
+    _links: { [key: string]: string };
+    /** 検索結果の配列 */
+    results: SearchResult[];
+    /** オフセット情報 */
+    start?: number;
+    /** 1 ページあたりの結果数 */
+    limit?: number;
+    /** 検索結果の合計数 */
+    size?: number;
+    [key: string]: unknown;
+  }
 }
