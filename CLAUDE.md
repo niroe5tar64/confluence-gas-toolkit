@@ -40,7 +40,7 @@ bun test
 
 ```
 src/index.ts              → GAS エントリーポイント、呼び出し可能な関数をエクスポート
-src/use-case/             → ジョブオーケストレーション (notify-job, summary-job)
+src/use-case/             → ジョブオーケストレーション (confluence-update-notify-job, confluence-update-summary-job)
 src/services/             → ビジネスロジック
   ├─ confluence/          → Confluence API 連携 & ページネーション
   ├─ slack/               → メッセージ送信
