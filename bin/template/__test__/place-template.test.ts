@@ -1,7 +1,7 @@
-import { placeTemplate } from "../place-template";
 import { describe, expect, test } from "bun:test";
 import fs from "fs";
 import path from "path";
+import { placeTemplate } from "../place-template";
 
 describe("placeTemplate", () => {
   test("replaces the template with the given dictionary", () => {

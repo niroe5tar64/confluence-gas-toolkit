@@ -1,7 +1,7 @@
-import { build as buildUsingVite } from "vite";
 import fs from "node:fs";
 import path from "node:path";
 import { ensureDirSync } from "fs-extra";
+import { build as buildUsingVite } from "vite";
 
 const build = async (filename: string, name: string) => {
   const res = await buildUsingVite({

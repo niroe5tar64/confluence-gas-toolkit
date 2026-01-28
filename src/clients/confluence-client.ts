@@ -1,5 +1,5 @@
 import type { Confluence } from "~/types";
-import { toQueryString, getEnvVariable } from "~/utils";
+import { getEnvVariable, toQueryString } from "~/utils";
 
 import HttpClient from "./http-client";
 

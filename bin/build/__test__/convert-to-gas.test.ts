@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { convertToGoogleAppsScript } from "../convert-to-gas";
 import path from "path";
+import { convertToGoogleAppsScript } from "../convert-to-gas";
 
 describe("convert-to-gas", () => {
   const __dirname = path.dirname(new URL(import.meta.url).pathname);

@@ -1,4 +1,4 @@
-import { JobName, JobExecutableCondition } from "~/types";
+import { JobExecutableCondition, JobName } from "~/types";
 
 import { jobExecutionPolicy } from "./job-schedule-config";
 

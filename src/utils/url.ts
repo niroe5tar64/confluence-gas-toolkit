@@ -4,7 +4,7 @@
  * @param params クエリパラメータのオブジェクト
  * @returns URL エンコードされたクエリ文字列
  */
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+// biome-ignore lint/suspicious/noExplicitAny: クエリパラメータは様々な型の値を受け取るため
 export function toQueryString(params: { [key: string]: any }): string {
   return Object.entries(params)
     .filter(([, value]) => value !== undefined) // undefined を除外

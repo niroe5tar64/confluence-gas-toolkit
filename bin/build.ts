@@ -1,8 +1,8 @@
-import fs from "fs-extra";
-import { convertAndWriteGoogleAppsScript } from "./build/convert-to-gas";
-import packageInfo from "../package.json";
 import path from "node:path";
+import fs from "fs-extra";
+import packageInfo from "../package.json";
 import { makeBanner } from "./build/banner";
+import { convertAndWriteGoogleAppsScript } from "./build/convert-to-gas";
 
 const packageInfoToGlobalName = (packageInfo: { name: string }) => {
   return packageInfo.name.split("/").at(-1) || "";

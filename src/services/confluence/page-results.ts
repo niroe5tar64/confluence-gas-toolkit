@@ -1,5 +1,5 @@
-import { multiSortBy } from "~/utils";
 import { Confluence } from "~/types";
+import { multiSortBy } from "~/utils";
 
 /**
  * Confluence の検索結果を更新日時 (`version.when`) に基づいて昇順にソートする関数。

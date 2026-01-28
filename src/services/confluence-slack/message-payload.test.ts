@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, mock } from "bun:test";
+import { beforeAll, describe, expect, it, mock } from "bun:test";
 import type { Confluence } from "~/types";
 
 // 環境変数のモック
@@ -42,12 +42,12 @@ describe("convertSearchResultToMessagePayload", () => {
       expect(result.blocks).toHaveLength(2);
 
       // ヘッダーブロックの確認
-      const headerBlock = result.blocks![0] as { type: string; text: { text: string } };
+      const headerBlock = result.blocks?.[0] as { type: string; text: { text: string } };
       expect(headerBlock.type).toBe("header");
       expect(headerBlock.text.text).toBe("テスト通知");
 
       // セクションブロックの確認
-      const sectionBlock = result.blocks![1] as { type: string; fields: { text: string }[] };
+      const sectionBlock = result.blocks?.[1] as { type: string; fields: { text: string }[] };
       expect(sectionBlock.type).toBe("section");
       expect(sectionBlock.fields).toHaveLength(2);
 
@@ -74,7 +74,7 @@ describe("convertSearchResultToMessagePayload", () => {
 
       const result = convertSearchResultToMessagePayload(searchResult, baseUrl);
 
-      const sectionBlock = result.blocks![1] as { type: string; fields: { text: string }[] };
+      const sectionBlock = result.blocks?.[1] as { type: string; fields: { text: string }[] };
       // バージョン1なので diff リンクは含まれない
       expect(sectionBlock.fields[0].text).not.toContain("diff");
       expect(sectionBlock.fields[0].text).toContain("新規ページ");
@@ -92,7 +92,7 @@ describe("convertSearchResultToMessagePayload", () => {
 
       const result = convertSearchResultToMessagePayload(searchResult, baseUrl);
 
-      const sectionBlock = result.blocks![1] as { type: string; fields: { text: string }[] };
+      const sectionBlock = result.blocks?.[1] as { type: string; fields: { text: string }[] };
       // 更新者と更新日時が「不明」
       expect(sectionBlock.fields[1].text).toContain("不明");
     });
@@ -106,7 +106,7 @@ describe("convertSearchResultToMessagePayload", () => {
 
       const result = convertSearchResultToMessagePayload(searchResult, baseUrl);
 
-      const sectionBlock = result.blocks![1] as { type: string; fields: { text: string }[] };
+      const sectionBlock = result.blocks?.[1] as { type: string; fields: { text: string }[] };
       expect(sectionBlock.fields[0].text).not.toContain("diff");
     });
   });
@@ -126,7 +126,7 @@ describe("convertSearchResultToMessagePayload", () => {
 
       const result = convertSearchResultToMessagePayload(searchResult, baseUrl);
 
-      const sectionBlock = result.blocks![1] as { type: string; fields: { text: string }[] };
+      const sectionBlock = result.blocks?.[1] as { type: string; fields: { text: string }[] };
       expect(sectionBlock.fields[0].text).toContain(
         `${baseUrl}/pages/viewpage.action?pageId=99999`,
       );
@@ -146,7 +146,7 @@ describe("convertSearchResultToMessagePayload", () => {
 
       const result = convertSearchResultToMessagePayload(searchResult, baseUrl);
 
-      const sectionBlock = result.blocks![1] as { type: string; fields: { text: string }[] };
+      const sectionBlock = result.blocks?.[1] as { type: string; fields: { text: string }[] };
       // diff URL には originalVersion=9 と revisedVersion=10 が含まれる
       expect(sectionBlock.fields[0].text).toContain("originalVersion=9");
       expect(sectionBlock.fields[0].text).toContain("revisedVersion=10");
@@ -168,7 +168,7 @@ describe("convertSearchResultToMessagePayload", () => {
 
       const result = convertSearchResultToMessagePayload(searchResult, baseUrl);
 
-      const sectionBlock = result.blocks![1] as { type: string; fields: { text: string }[] };
+      const sectionBlock = result.blocks?.[1] as { type: string; fields: { text: string }[] };
       expect(sectionBlock.fields[0].text).toContain("テスト<>&\"'ページ");
     });
   });

@@ -1,5 +1,5 @@
-import { Slack } from "src/types/slack";
 import { SlackClient } from "~/clients";
+import { Slack } from "~/types";
 
 /**
  * Slack にメッセージを送信するサービス関数。
