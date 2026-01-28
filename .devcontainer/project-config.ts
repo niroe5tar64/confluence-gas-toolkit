@@ -8,7 +8,7 @@
  *   npx @niroe5tar64/devcontainer init
  */
 export const projectConfig = {
-  name: 'Confluence-GAS-Toolkit'
+  name: "Confluence-GAS-Toolkit",
 };
 
 /**
@@ -16,5 +16,5 @@ export const projectConfig = {
  * （DevContainerConfig 型には含まれないが、JSON としては有効）
  */
 export const projectConfigMetadata = {
-  $comment: '',
+  $comment: "",
 };

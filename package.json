@@ -8,13 +8,11 @@
   "devDependencies": {
     "@biomejs/biome": "^1.5.2",
     "@google/clasp": "^2.4.2",
-    "@slack/webhook": "^7.0.4",
     "@topcli/prompts": "^1.8.0",
     "@types/bun": "^1.0.4",
     "@types/fs-extra": "^11.0.4",
     "@types/google-apps-script": "^1.0.78",
     "bun-types": "latest",
-    "fetch-confluence": "^1.0.166",
     "fs-extra": "^11.2.0",
     "vite": "^5.0.11"
   },
