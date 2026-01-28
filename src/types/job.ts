@@ -21,14 +21,13 @@ export interface JobDataBase {
 
 export interface JobDataForUpdateJob extends JobDataBase {}
 
-// TODO: 型名などを精査する。
 // JobData型を拡張して、ページ情報を追加した型
 export interface JobDataForSummaryJob extends JobDataBase {
   originalVersions: Record<string, number>;
 }
 
 // JobData型かどうかを判定するType Guard関数
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+// biome-ignore lint/suspicious/noExplicitAny: JSONパース結果の型が不定のため
 export function isJobData(data: any): data is JobData {
   if (typeof data !== "object" || data === null || typeof data.timestamp !== "string") {
     return false;

@@ -119,13 +119,6 @@ function createSlackSummaryPayload(args: SlackSummaryPayloadArgs): Slack.Message
                 });
               }
 
-              // richTextElements.push({
-              //   type: "text",
-              //   text:
-              //     `last updated at: ${lastUpdated.by ?? "不明"}` +
-              //     `last updated by: ${lastUpdated.at ? formatDateJST(lastUpdated.at) : "不明"}`,
-              // });
-
               return {
                 type: "rich_text_section",
                 elements: richTextElements,
