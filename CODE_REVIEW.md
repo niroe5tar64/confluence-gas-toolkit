@@ -6,6 +6,19 @@
 
 コードベース全体を調査し、修正が必要な箇所を以下にまとめました。
 
+### 型定義の変更について
+
+2026-01-28 に外部パッケージ依存を削除し、Confluence・Slack の型定義を最小化しました：
+
+- **`src/types/confluence.ts`**: `fetch-confluence` パッケージの依存を削除。実装で使用されているプロパティのみを定義
+  - `SearchPage._links` は `{ [key: string]: string }` の構造に統一
+  - `Version.by` は必須プロパティ、`displayName` を必須として定義
+
+- **`src/types/slack.ts`**: `@slack/webhook` パッケージの依存を削除。Block Kit 仕様に基づいた型定義を実装
+  - `MessagePayload` は簡潔な構造に変更
+
+このため、本レビュー内の「HIGH#5. オプショナルチェーンの不足」と「SEVERE#4. 非同期処理の問題」の部分は、新しい型定義を踏まえて修正されています。
+
 ---
 
 ## CRITICAL（重大）
@@ -57,18 +70,18 @@ nextEndpoint = nextPages._links.next;
 nextEndpoint = nextPages._links?.next;
 ```
 
-**影響**: APIレスポンスに `_links` がない場合、`Cannot read property 'next' of undefined` エラーが発生する。
+**影響**: 型定義で `_links` は必須プロパティとして定義されているが、`next` キーが存在しない場合（最後のページ時）、undefined が返る。この値を直接使用するとエラーが発生する。
 
 ---
 
 ## SEVERE（深刻）
 
-### 4. 非同期処理の問題
+### 4. 非同期処理の問題と型安全性
 
 **ファイル**: `src/use-case/confluence-update-notify-job.ts:51-54`
 
 ```typescript
-// 現在（誤り）- awaitなしのmap
+// 現在（誤り）- awaitなしのmap、かつ _links.base の安全性が不確定
 sortedSearchResults.map(async (result: Confluence.SearchResult) => {
   const payload = convertSearchResultToMessagePayload(result, recentChangePages._links.base);
   await sendSlackMessage(payload);
@@ -76,7 +89,7 @@ sortedSearchResults.map(async (result: Confluence.SearchResult) => {
 
 // 修正後
 await Promise.all(sortedSearchResults.map(async (result: Confluence.SearchResult) => {
-  const payload = convertSearchResultToMessagePayload(result, recentChangePages._links.base);
+  const payload = convertSearchResultToMessagePayload(result, recentChangePages._links.base || "");
   await sendSlackMessage(payload);
 }));
 ```
@@ -85,6 +98,7 @@ await Promise.all(sortedSearchResults.map(async (result: Confluence.SearchResult
 - Slack メッセージ送信の完了を待たずにジョブが終了する
 - Promise の reject が無視される
 - エラーが発生しても検知できない
+- 型定義で `_links: { [key: string]: string }` のため、`base` キーの存在が保証されない
 
 ---
 
@@ -95,14 +109,14 @@ await Promise.all(sortedSearchResults.map(async (result: Confluence.SearchResult
 **ファイル**: `src/services/confluence-slack/message-payload.ts:34`
 
 ```typescript
-// 現在（危険）
+// 現在（問題なし）
 updatedBy: version?.by.displayName,
 
-// 修正後
-updatedBy: version?.by?.displayName,
+// 型定義では by が必須なため、上記で十分
+// version が undefined なら undefined、存在なら displayName を返す
 ```
 
-**影響**: `version` が存在しても `by` が undefined の場合にエラーが発生する。
+**型定義の変更**: 新しい `Confluence.Version` 型では、`by` を必須プロパティとして定義したため、`version?.by.displayName` で安全。`by` が undefined の可能性は考慮不要。
 
 ---
 
@@ -246,26 +260,29 @@ const POLLING_INFO_DIR = "data";
 |--------|------|------|
 | CRITICAL | 3 | 即時修正必須 |
 | SEVERE | 1 | 早急に修正 |
-| HIGH | 3 | 近日中に修正 |
+| HIGH | 2 | 近日中に修正（#5 は型定義の変更により解決） |
 | MEDIUM | 2 | 計画的に修正 |
 | LOW | 4 | 余裕があれば修正 |
-| **合計** | **13** | |
+| **合計** | **12** | |
+
+**注**: HIGH#5（オプショナルチェーンの不足）は、新しい型定義で `Version.by` が必須プロパティとして定義されたため、型安全性が確保された。
 
 ---
 
 ## 推奨アクション
 
-1. **即時対応**:
+1. **即時対応** (CRITICAL・SEVERE):
    - `bin/prepare-clasp-json.ts` のフラグ修正（本番デプロイが動作しない）
    - `src/services/slack/slack-message.ts` のインポートパス修正
-   - 非同期処理の `Promise.all` 追加
+   - 非同期処理の `Promise.all` 追加と `_links.base` の存在チェック
 
-2. **次回リリース前**:
-   - オプショナルチェーンの追加
+2. **次回リリース前** (HIGH):
+   - ページネーション時の `_links.next` のオプショナルチェーン追加
    - 空配列チェックの追加
    - 型アサーションの改善
 
-3. **リファクタリング**:
+3. **リファクタリング** (MEDIUM・LOW):
    - 不要なコメントアウトコードの削除
-   - スペルミスの修正
+   - スペルミスの修正（`POLING_INFO_DIR` → `POLLING_INFO_DIR`）
    - biome-ignore の説明追記
+   - tsconfig.json の末尾カンマ削除
