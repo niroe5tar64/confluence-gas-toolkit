@@ -10,7 +10,7 @@ yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
 
-# Caches 
+# Caches
 
 .cache
 
@@ -177,3 +177,13 @@ dist
 dist
 data
 .clasp*.json
+
+# Claude Code local overrides
+.claude/settings.local.json
+
+# Codex (local state)
+.codex/
+!.codex/skills/
+!.codex/skills/**
+.codex/skills/.system/
+
