@@ -1,7 +1,7 @@
-import { JobDataFileName, JobData, isJobData } from "~/types";
-import { writeFile, readFile } from "~/utils";
+import { JobData, JobDataFileName, isJobData } from "~/types";
+import { readFile, writeFile } from "~/utils";
 
-const POLING_INFO_DIR = "data"; // ポーリング情報を保存するファイル名
+const POLLING_INFO_DIR = "data"; // ポーリング情報を保存するファイル名
 
 /**
  * デフォルトのポーリング情報を生成する関数。
@@ -22,7 +22,7 @@ function defaultJobData(): JobData {
  * 結果を JSON ファイルに保存します。
  *
  * - デフォルトのポーリング情報は `defaultJobData` 関数で生成されます。
- * - 保存先のファイルは `POLING_INFO_DIR` ディレクトリ内の指定されたファイル名です。
+ * - 保存先のファイルは `POLLING_INFO_DIR` ディレクトリ内の指定されたファイル名です。
  *
  * @param {Partial<JobData>} partialJobData - 更新するポーリング情報の一部。
  *   - 指定されたプロパティのみが既存の情報に上書きされます。
@@ -37,7 +37,7 @@ function defaultJobData(): JobData {
 export function updateJobData(partialJobData: Partial<JobData>, fileName: JobDataFileName): void {
   const jobData = { ...defaultJobData(), ...partialJobData };
 
-  writeFile(`${POLING_INFO_DIR}/${fileName}`, JSON.stringify(jobData, null, 2));
+  writeFile(`${POLLING_INFO_DIR}/${fileName}`, JSON.stringify(jobData, null, 2));
 }
 
 /**
@@ -46,7 +46,7 @@ export function updateJobData(partialJobData: Partial<JobData>, fileName: JobDat
  * 指定されたファイル名から保存されたポーリング情報を読み取り、`JobData` 型として解析します。
  * ファイルの内容が `JobData` 型に適合しない場合は `null` を返します。
  *
- * - 保存先のファイルは `POLING_INFO_DIR` ディレクトリ内の指定されたファイル名です。
+ * - 保存先のファイルは `POLLING_INFO_DIR` ディレクトリ内の指定されたファイル名です。
  * - ファイルが存在しない場合や内容が不正な場合は `null` を返します。
  *
  * @param {JobDataFileName} fileName - 読み取るポーリング情報のファイル名。
@@ -63,7 +63,7 @@ export function updateJobData(partialJobData: Partial<JobData>, fileName: JobDat
  */
 export function parseJobData(fileName: JobDataFileName): JobData | null {
   try {
-    const jobData = readFile(`${POLING_INFO_DIR}/${fileName}`);
+    const jobData = readFile(`${POLLING_INFO_DIR}/${fileName}`);
 
     return isJobData(jobData) ? jobData : null;
   } catch (error) {
