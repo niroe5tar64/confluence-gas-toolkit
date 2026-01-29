@@ -195,19 +195,6 @@ export default class ConfluenceClient extends HttpClient {
   }
 
   /**
-   * ConfluenceClient のシングルトンインスタンスを取得する。
-   *
-   * @returns {ConfluenceClient} ConfluenceClient のシングルトンインスタンス
-   * @throws {Error} このメソッドは廃止されました
-   * @deprecated getConfluenceClient(jobName) を使用してください
-   */
-  public static getInstance(): ConfluenceClient {
-    throw new Error(
-      "getInstance() は廃止されました。getConfluenceClient(jobName) を使用してください。",
-    );
-  }
-
-  /**
    * テスト用: シングルトンインスタンスをリセット
    * @internal
    */

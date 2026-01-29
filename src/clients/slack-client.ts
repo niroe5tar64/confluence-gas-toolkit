@@ -98,18 +98,6 @@ export default class SlackClient extends HttpClient {
   }
 
   /**
-   * SlackClient のシングルトンインスタンスを取得する。
-   * @returns {SlackClient} - SlackClient のインスタンス
-   * @throws {Error} このメソッドは廃止されました
-   * @deprecated getSlackClient(targetKey) を使用してください
-   */
-  public static getInstance(): SlackClient {
-    throw new Error(
-      "getInstance() は廃止されました。getSlackClient(targetKey) を使用してください。",
-    );
-  }
-
-  /**
    * Slack にカスタマイズ可能なメッセージを送信する
    * @param {object} payload - Slack メッセージのペイロード
    * @returns {Promise<void>} - 送信成功時に解決される Promise

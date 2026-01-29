@@ -79,10 +79,8 @@ describe("getSlackClient", () => {
   });
 
   describe("廃止されたAPI", () => {
-    it("getInstance() は例外をスローする", () => {
-      expect(() => SlackClient.getInstance()).toThrow(
-        "getInstance() は廃止されました。getSlackClient(targetKey) を使用してください。",
-      );
+    it("getInstance() は削除されている", () => {
+      expect("getInstance" in SlackClient).toBe(false);
     });
   });
 

@@ -361,10 +361,8 @@ describe("getConfluenceClient", () => {
   });
 
   describe("廃止されたAPI", () => {
-    it("getInstance() は例外をスローする", () => {
-      expect(() => ConfluenceClient.getInstance()).toThrow(
-        "getInstance() は廃止されました。getConfluenceClient(jobName) を使用してください。",
-      );
+    it("getInstance() は削除されている", () => {
+      expect("getInstance" in ConfluenceClient).toBe(false);
     });
   });
 

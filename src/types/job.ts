@@ -15,7 +15,10 @@ export interface JobExecutableCondition {
   endHour: number; // 例: 19（19:00）
 }
 
-export type JobDataFileName = "confluence-update-notify-job.json" | "confluence-summary-job.json";
+export type JobDataFileName =
+  | "confluence-update-notify-job.json"
+  | "confluence-summary-job.json"
+  | "confluence-create-notify-job.json";
 
 export type JobData = JobDataForUpdateJob | JobDataForSummaryJob;
 export interface JobDataBase {

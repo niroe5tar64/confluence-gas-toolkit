@@ -102,14 +102,14 @@ interface RichTextText {
 /**
  * リッチテキスト内の要素の合計型
  */
-export type RichTextElement = RichTextLink | RichTextText;
+type RichTextElementBase = RichTextLink | RichTextText;
 
 /**
  * リッチテキストセクション
  */
 interface RichTextSection {
   type: "rich_text_section";
-  elements: RichTextElement[];
+  elements: RichTextElementBase[];
 }
 
 /**
@@ -163,7 +163,7 @@ type Block = HeaderBlock | SectionBlock | RichTextBlock | ContextBlock | Divider
  * Slack Webhook 用のメッセージペイロード
  */
 export namespace Slack {
-  export type RichTextElement = RichTextLink | RichTextText;
+  export type RichTextElement = RichTextElementBase;
   export interface MessagePayload {
     /** メッセージのテキスト（フォールバック用） */
     text?: string;
