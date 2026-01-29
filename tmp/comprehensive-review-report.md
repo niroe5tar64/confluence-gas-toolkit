@@ -12,6 +12,20 @@
 
 ---
 
+## 修正状況
+
+以下の項目は修正完了しました：
+
+- **Issue 13**: 未実装のジョブ（confluenceCreateNotifyJob） → ✅ 実装完了
+  - ページ新規作成検出ロジックを実装
+  - Slack通知機能を統合
+
+- **Issue 14**: 廃止API（getInstance）の削除 → ✅ 削除完了
+  - `ConfluenceClient.getInstance()` を完全削除
+  - `SlackClient.getInstance()` を完全削除
+
+---
+
 ## 🔴 Critical（即座に修正が必要）
 
 ### 1. 無効なタイムスタンプ判定が常に false

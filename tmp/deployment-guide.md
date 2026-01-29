@@ -23,7 +23,7 @@
 - **影響ジョブ**:
   - `confluenceUpdateNotifyJob`
   - `confluenceUpdateSummaryJob`
-  - `confluenceCreateNotifyJob`（新規）
+  - `confluenceCreateNotifyJob`（ページ新規作成通知）
 
 ---
 

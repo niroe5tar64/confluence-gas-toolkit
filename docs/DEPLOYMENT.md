@@ -96,7 +96,7 @@ bun run build
 
     | 項目 | 設定値 |
     |------|--------|
-    | 実行する関数 | `confluenceUpdateNotifyJob` または `confluenceUpdateSummaryJob` |
+    | 実行する関数 | `confluenceUpdateNotifyJob`、`confluenceUpdateSummaryJob`、`confluenceCreateNotifyJob` など |
     | 実行するデプロイ | 「Head」 |
     | イベントのソース | 「時間主導型」 |
     | 時間ベースのトリガーのタイプ | 「分ベースのタイマー」 |
@@ -110,6 +110,7 @@ bun run build
 |--------|------|
 | `confluenceUpdateNotifyJob` | ページ更新を個別に Slack 通知 |
 | `confluenceUpdateSummaryJob` | ページ更新をサマリー形式で Slack 通知 |
+| `confluenceCreateNotifyJob` | 新規作成ページを Slack 通知 |
 
 ### トリガー設定のベストプラクティス
 
@@ -134,8 +135,14 @@ GAS 環境では環境変数の代わりに Script Properties を使用します
 | `CONFLUENCE_URL` | Confluence のベース URL |
 | `SPACE_KEY` | 監視対象のスペースキー |
 | `ROOT_PAGE_ID` | 監視対象の親ページ ID |
-| `SLACK_WEBHOOK_URL` | Slack Webhook URL |
+| `SLACK_WEBHOOK_URLS` | ジョブごとの Webhook URL（JSON形式） |
+| `SLACK_WEBHOOK_URL` | 旧形式の Webhook URL（後方互換用、オプション） |
 | `SLACK_HEADER_TEXT` | 通知ヘッダーテキスト |
+
+> **注記**: `SLACK_WEBHOOK_URLS` は JSON 形式で以下のように設定します：
+> ```json
+> {"update-notify":"https://hooks.slack.com/...","update-summary":"https://hooks.slack.com/...","create-notify":"https://hooks.slack.com/..."}
+> ```
 
 ## デプロイの確認
 
