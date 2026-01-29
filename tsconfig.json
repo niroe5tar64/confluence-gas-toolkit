@@ -3,6 +3,7 @@
     "baseUrl": ".",
     "paths": {
       "~/clients": ["src/clients"],
+      "~/config": ["src/config"],
       "~/services": ["src/services"],
       "~/types": ["src/types"],
       "~/use-case": ["src/use-case"],

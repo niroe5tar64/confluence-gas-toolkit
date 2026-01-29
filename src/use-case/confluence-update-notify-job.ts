@@ -1,3 +1,4 @@
+import { SLACK_ROUTE } from "~/config";
 import {
   convertSearchResultToMessagePayload,
   fetchRecentChanges,
@@ -9,6 +10,8 @@ import {
   updateJobData,
 } from "~/services";
 import { Confluence } from "~/types";
+
+const TARGET_KEY = SLACK_ROUTE.confluenceUpdateNotifyJob;
 
 /**
  * 定期実行される通知ジョブのメイン処理を実行します。
@@ -29,7 +32,7 @@ export async function confluenceUpdateNotifyJob() {
     await executeMainProcess();
   } catch (error: unknown) {
     if (error instanceof Error) {
-      await sendSlackException(error);
+      await sendSlackException(error, TARGET_KEY);
     }
   }
 }
@@ -52,7 +55,7 @@ async function executeMainProcess() {
   await Promise.all(
     sortedSearchResults.map(async (result: Confluence.SearchResult) => {
       const payload = convertSearchResultToMessagePayload(result, baseUrl);
-      await sendSlackMessage(payload);
+      await sendSlackMessage(payload, TARGET_KEY);
     }),
   );
 

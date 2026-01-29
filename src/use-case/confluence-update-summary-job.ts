@@ -1,3 +1,4 @@
+import { SLACK_ROUTE } from "~/config";
 import {
   convertSearchResultsToSummaryPayload,
   fetchAllPages,
@@ -9,12 +10,14 @@ import {
 } from "~/services";
 import { JobDataForSummaryJob } from "~/types";
 
+const TARGET_KEY = SLACK_ROUTE.confluenceUpdateSummaryJob;
+
 export async function confluenceUpdateSummaryJob() {
   try {
     await executeMainProcess();
   } catch (error: unknown) {
     if (error instanceof Error) {
-      await sendSlackException(error);
+      await sendSlackException(error, TARGET_KEY);
     }
   }
 }
@@ -52,7 +55,7 @@ async function executeMainProcess() {
     recentChangePages._links.base,
   );
 
-  await sendSlackMessage(payload);
+  await sendSlackMessage(payload, TARGET_KEY);
 
   const latestVersions = recentChangePages.results.reduce(
     (acc, result) => {
