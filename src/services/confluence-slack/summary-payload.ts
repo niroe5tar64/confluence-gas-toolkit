@@ -51,7 +51,7 @@ function createUpdatedPage(
       ? toQueryString({
           pageId: id,
           originalVersion: String(originalVersion),
-          currentVersion: String(currentVersion),
+          revisedVersion: String(currentVersion),
         })
       : undefined;
 

@@ -76,11 +76,11 @@ function getPageConfigs(): Record<JobName, PageConfig> {
   }
 
   // 後方互換性：既存環境変数から生成（単一ページ）
-  const rootPageId = getEnvVariable("ROOT_PAGE_ID") || "";
-  const spaceKey = getEnvVariable("SPACE_KEY") || "";
+  const rootPageId = getEnvVariable("ROOT_PAGE_ID");
+  const spaceKey = getEnvVariable("SPACE_KEY");
   const defaultConfig: PageConfig = {
     rootPageIds: rootPageId ? [rootPageId] : [],
-    spaceKey,
+    spaceKey: spaceKey ?? "",
   };
 
   cachedPageConfigs = {
@@ -109,13 +109,25 @@ export function getConfluenceClient(jobName: JobName): ConfluenceClient {
   const configs = getPageConfigs();
   const config = configs[jobName];
   if (!config?.rootPageIds?.length || !config?.spaceKey) {
+    const missingConfig = [];
+    const rawConfigs = getEnvVariable("CONFLUENCE_PAGE_CONFIGS");
+    if (!rawConfigs) {
+      if (!getEnvVariable("ROOT_PAGE_ID")) missingConfig.push("ROOT_PAGE_ID");
+      if (!getEnvVariable("SPACE_KEY")) missingConfig.push("SPACE_KEY");
+    }
+    if (missingConfig.length > 0) {
+      throw new Error(`必須環境変数が未設定です: ${missingConfig.join(", ")}`);
+    }
     throw new Error(`ジョブ ${jobName} の設定が見つかりません`);
   }
 
-  const baseUrl = getEnvVariable("CONFLUENCE_URL") || "";
-  const token = getEnvVariable("CONFLUENCE_PAT") || "";
-  if (!baseUrl || !token) {
-    throw new Error("環境変数が正しく設定されていません。");
+  const baseUrl = getEnvVariable("CONFLUENCE_URL");
+  const token = getEnvVariable("CONFLUENCE_PAT");
+  const missingEnv = [];
+  if (!baseUrl) missingEnv.push("CONFLUENCE_URL");
+  if (!token) missingEnv.push("CONFLUENCE_PAT");
+  if (missingEnv.length > 0) {
+    throw new Error(`必須環境変数が未設定です: ${missingEnv.join(", ")}`);
   }
 
   // 複数ページ対応：第1ページをメインのrootPageIdとして使用
@@ -301,6 +313,11 @@ export default class ConfluenceClient extends HttpClient {
     extraCql?: string;
     option?: Confluence.SearchRequestOption;
   }): Promise<Confluence.SearchPage> {
+    if (this.rootPageIds.length === 0) {
+      console.warn("rootPageIds が空のため、処理をスキップします");
+      return { _links: {}, results: [], start: 0, limit: 0, size: 0 };
+    }
+
     const cqlList = [
       "type=page", // ページコンテンツのみ取得
       `space=${this.spaceKey}`, // 対象となるスペースのページのみ取得

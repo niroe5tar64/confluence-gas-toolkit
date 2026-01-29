@@ -13,10 +13,10 @@
 - [x] Task 2: await 忘れの修正
 
 ### 🟠 High（重要）
-- [ ] Task 3: diff URL パラメータの修正
-- [ ] Task 4: Slack 送信エラーハンドリング改善
-- [ ] Task 5: rootPageIds 空配列チェック追加
-- [ ] Task 6: 環境変数バリデーション追加
+- [x] Task 3: diff URL パラメータの修正
+- [x] Task 4: Slack 送信エラーハンドリング改善
+- [x] Task 5: rootPageIds 空配列チェック追加
+- [x] Task 6: 環境変数バリデーション追加
 
 ### 🟡 Medium（推奨）
 - [ ] Task 7: 型定義の重複解消

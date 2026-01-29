@@ -38,7 +38,7 @@ function initializeWebhookUrls(): Record<string, string> {
     return { DEFAULT: legacyUrl };
   }
 
-  throw new Error("SLACK_WEBHOOK_URLS が設定されていません");
+  throw new Error("必須環境変数が未設定です: SLACK_WEBHOOK_URLS, SLACK_WEBHOOK_URL");
 }
 
 /**
@@ -112,20 +112,27 @@ export default class SlackClient extends HttpClient {
   /**
    * Slack にカスタマイズ可能なメッセージを送信する
    * @param {object} payload - Slack メッセージのペイロード
-   * @returns {Promise<boolean>} - 送信成功時に `true` を返す
+   * @returns {Promise<void>} - 送信成功時に解決される Promise
    */
-  async send(payload: object): Promise<boolean> {
-    try {
-      await this.httpRequest(this.webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+  async send(payload: object): Promise<void> {
+    const response = await this.httpRequest(this.webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-      return true;
-    } catch (error) {
-      console.error("Slack メッセージ送信エラー:", error);
-      return false;
+    if ("ok" in response) {
+      if (!response.ok) {
+        throw new Error(`Slack送信失敗: ${response.status} ${response.statusText}`.trim());
+      }
+      return;
+    }
+
+    if ("getResponseCode" in response) {
+      const status = response.getResponseCode();
+      if (status >= 400) {
+        throw new Error(`Slack送信失敗: ${status}`);
+      }
     }
   }
 }

@@ -72,7 +72,9 @@ describe("getSlackClient", () => {
     it("両方の環境変数が未設定の場合はエラーをスロー", () => {
       getEnvVariableSpy.mockReturnValue("");
 
-      expect(() => getSlackClient("any-key")).toThrow("SLACK_WEBHOOK_URLS が設定されていません");
+      expect(() => getSlackClient("any-key")).toThrow(
+        "必須環境変数が未設定です: SLACK_WEBHOOK_URLS, SLACK_WEBHOOK_URL",
+      );
     });
   });
 
@@ -81,6 +83,23 @@ describe("getSlackClient", () => {
       expect(() => SlackClient.getInstance()).toThrow(
         "getInstance() は廃止されました。getSlackClient(targetKey) を使用してください。",
       );
+    });
+  });
+
+  describe("SlackClient.send", () => {
+    it("HTTP エラー時に例外をスローする", async () => {
+      const client = new SlackClient("https://hooks.slack.com/services/AAA");
+      const httpRequestSpy = spyOn(client as unknown as { httpRequest: typeof client["httpRequest"] }, "httpRequest")
+        .mockResolvedValue({
+          ok: false,
+          status: 500,
+          statusText: "Internal Server Error",
+        } as Response);
+
+      await expect(client.send({ text: "test message" })).rejects.toThrow(
+        "Slack送信失敗: 500 Internal Server Error",
+      );
+      expect(httpRequestSpy).toHaveBeenCalled();
     });
   });
 });

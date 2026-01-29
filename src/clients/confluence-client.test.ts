@@ -186,7 +186,7 @@ describe("getConfluenceClient", () => {
       });
 
       expect(() => getConfluenceClient("confluenceUpdateNotifyJob")).toThrow(
-        "環境変数が正しく設定されていません。",
+        "必須環境変数が未設定です: CONFLUENCE_URL",
       );
     });
 
@@ -214,7 +214,19 @@ describe("getConfluenceClient", () => {
       });
 
       expect(() => getConfluenceClient("confluenceUpdateNotifyJob")).toThrow(
-        "環境変数が正しく設定されていません。",
+        "必須環境変数が未設定です: CONFLUENCE_PAT",
+      );
+    });
+
+    it("ROOT_PAGE_ID と SPACE_KEY が未設定の場合は明確なエラーをスロー", () => {
+      getEnvVariableSpy.mockImplementation((key: string) => {
+        if (key === "CONFLUENCE_URL") return "https://confluence.example.com";
+        if (key === "CONFLUENCE_PAT") return "test-token";
+        return "";
+      });
+
+      expect(() => getConfluenceClient("confluenceUpdateNotifyJob")).toThrow(
+        "必須環境変数が未設定です: ROOT_PAGE_ID, SPACE_KEY",
       );
     });
 
@@ -353,6 +365,29 @@ describe("getConfluenceClient", () => {
       expect(() => ConfluenceClient.getInstance()).toThrow(
         "getInstance() は廃止されました。getConfluenceClient(jobName) を使用してください。",
       );
+    });
+  });
+
+  describe("ConfluenceClient.getSearchPage", () => {
+    it("rootPageIds が空の場合は空の結果を返す", async () => {
+      const client = new (ConfluenceClient as unknown as {
+        new (
+          baseUrl: string,
+          token: string,
+          spaceKey: string,
+          rootPageId: string,
+          rootPageIds?: string[],
+        ): ConfluenceClient;
+      })("https://confluence.example.com", "token", "SPACE", "root", []);
+
+      const callApiSpy = spyOn(client as unknown as { callApi: typeof client["callApi"] }, "callApi")
+        .mockResolvedValue({ results: [{ id: "should-not-be-called" }] } as unknown);
+
+      const result = await client.getSearchPage({});
+
+      expect(callApiSpy).not.toHaveBeenCalled();
+      expect(result.results).toEqual([]);
+      expect(result._links).toEqual({});
     });
   });
 });
