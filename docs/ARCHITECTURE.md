@@ -149,8 +149,10 @@ if (isGAS) {
 
 | 環境 | 保存先 |
 |------|--------|
-| GAS | PropertiesService |
-| ローカル | `data/*.json` ファイル |
+| GAS | Google Drive に `data/*.json` を作成して永続化（Drive 権限が必要） |
+| ローカル | リポジトリ直下の `data/*.json` ファイル |
+
+> Note: 初期案では PropertiesService を想定していましたが、現在の実装は Drive ベースです。GAS へのデプロイ時は Drive API 権限付与（スクリプトの「Google Drive へのアクセス」）を忘れないでください。
 
 ## データフロー
 
