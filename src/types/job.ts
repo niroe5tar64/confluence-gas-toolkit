@@ -19,7 +19,7 @@ export interface JobDataBase {
   timestamp: string;
 }
 
-export interface JobDataForUpdateJob extends JobDataBase {}
+export type JobDataForUpdateJob = JobDataBase;
 
 // JobData型を拡張して、ページ情報を追加した型
 export interface JobDataForSummaryJob extends JobDataBase {
