@@ -44,10 +44,11 @@ export type JobName = "confluenceUpdateNotifyJob";
 ```typescript
 export type JobName =
   | "confluenceUpdateNotifyJob"
-  | "confluenceUpdateSummaryJob";
+  | "confluenceUpdateSummaryJob"
+  | "confluenceCreateNotifyJob";
 ```
 
-> 将来 `confluenceCreateNotifyJob` を追加する場合も同様に追加
+> 新しいジョブを追加する場合は、JobName 型にジョブ名を追加する
 
 ---
 
@@ -65,6 +66,7 @@ import type { JobName } from "~/types";
 export const SLACK_ROUTE: Record<JobName, string> = {
   confluenceUpdateNotifyJob: "update-notify",
   confluenceUpdateSummaryJob: "update-summary",
+  confluenceCreateNotifyJob: "create-notify",
 };
 ```
 
@@ -372,13 +374,40 @@ await sendSlackMessage(payload, TARGET_KEY);
 
 ---
 
+### confluence-create-notify-job.ts
+
+**ファイル**: `src/use-case/confluence-create-notify-job.ts`（新規作成）
+
+```typescript
+import { SLACK_ROUTE } from "~/config";
+import { sendSlackException, sendSlackMessage } from "~/services";
+
+const TARGET_KEY = SLACK_ROUTE.confluenceCreateNotifyJob;
+
+export async function confluenceCreateNotifyJob() {
+  try {
+    // TODO: 新規作成ページの取得・通知ロジックを実装
+    const payload = { text: "新規ページが作成されました" };
+    await sendSlackMessage(payload, TARGET_KEY);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      await sendSlackException(error, TARGET_KEY);
+    }
+  }
+}
+```
+
+> 具体的な新規作成ページの取得・通知ロジックは別途実装
+
+---
+
 ## Step 6: 環境変数を設定
 
 ### ローカル開発 (.env)
 
 ```env
 # 新形式（JSON）
-SLACK_WEBHOOK_URLS={"update-notify":"https://hooks.slack.com/services/XXX","update-summary":"https://hooks.slack.com/services/YYY","DEFAULT":"https://hooks.slack.com/services/ZZZ"}
+SLACK_WEBHOOK_URLS={"update-notify":"https://hooks.slack.com/services/XXX","update-summary":"https://hooks.slack.com/services/YYY","create-notify":"https://hooks.slack.com/services/WWW","DEFAULT":"https://hooks.slack.com/services/ZZZ"}
 
 # 旧形式（移行期間中は残しておく）
 SLACK_WEBHOOK_URL=https://hooks.slack.com/services/ZZZ
@@ -406,6 +435,13 @@ clasp push 前に GAS の「プロジェクトの設定」→「スクリプト 
 ### テスト確認
 - [ ] `bun test` が成功する
 - [ ] 既存テストが壊れていない
+- [ ] 新規テストが追加されている
+  - `src/clients/slack-client.test.ts`
+  - `src/services/slack/slack-message.test.ts`
+  - `src/config/slack-routes.test.ts`
+  - `src/use-case/confluence-update-notify-job.test.ts`
+  - `src/use-case/confluence-update-summary-job.test.ts`
+  - `src/use-case/confluence-create-notify-job.test.ts`
 
 ### 動作確認（ローカル）
 - [ ] `SLACK_WEBHOOK_URLS` 未設定時、`SLACK_WEBHOOK_URL` にフォールバックする
@@ -437,12 +473,19 @@ clasp push 前に GAS の「プロジェクトの設定」→「スクリプト 
 |----------|------|------|
 | `src/types/job.ts` | 変更 | JobName 型を拡張 |
 | `src/config/slack-routes.ts` | 新規 | ルーティング設定 |
+| `src/config/slack-routes.test.ts` | 新規 | ルーティング設定のテスト |
 | `src/config/index.ts` | 新規 | エクスポート |
 | `tsconfig.json` | 変更 | パスエイリアス追加 |
 | `vite.config.ts` | 変更 | パスエイリアス追加 |
 | `src/clients/slack-client.ts` | 変更 | レジストリパターン |
+| `src/clients/slack-client.test.ts` | 新規 | getSlackClient のテスト |
 | `src/clients/index.ts` | 変更 | getSlackClient エクスポート |
 | `src/services/slack/slack-message.ts` | 変更 | targetKey 引数追加 |
+| `src/services/slack/slack-message.test.ts` | 新規 | targetKey 引数のテスト |
 | `src/use-case/confluence-update-notify-job.ts` | 変更 | targetKey を渡す |
+| `src/use-case/confluence-update-notify-job.test.ts` | 新規 | ルーティングのテスト |
 | `src/use-case/confluence-update-summary-job.ts` | 変更 | targetKey を渡す |
+| `src/use-case/confluence-update-summary-job.test.ts` | 新規 | ルーティングのテスト |
+| `src/use-case/confluence-create-notify-job.ts` | 新規 | 新規作成通知ジョブ |
+| `src/use-case/confluence-create-notify-job.test.ts` | 新規 | ルーティングのテスト |
 | `.env` | 変更 | SLACK_WEBHOOK_URLS 追加 |

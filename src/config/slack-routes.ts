@@ -7,4 +7,5 @@ import type { JobName } from "~/types";
 export const SLACK_ROUTE: Record<JobName, string> = {
   confluenceUpdateNotifyJob: "update-notify",
   confluenceUpdateSummaryJob: "update-summary",
+  confluenceCreateNotifyJob: "create-notify",
 };

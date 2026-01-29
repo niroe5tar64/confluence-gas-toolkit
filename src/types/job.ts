@@ -1,4 +1,7 @@
-export type JobName = "confluenceUpdateNotifyJob" | "confluenceUpdateSummaryJob";
+export type JobName =
+  | "confluenceUpdateNotifyJob"
+  | "confluenceUpdateSummaryJob"
+  | "confluenceCreateNotifyJob";
 
 export interface JobExecutionRule {
   name: string;

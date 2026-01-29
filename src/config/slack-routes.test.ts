@@ -10,6 +10,10 @@ describe("SLACK_ROUTE", () => {
     expect(SLACK_ROUTE.confluenceUpdateSummaryJob).toBe("update-summary");
   });
 
+  it("confluenceCreateNotifyJob のルートが定義されている", () => {
+    expect(SLACK_ROUTE.confluenceCreateNotifyJob).toBe("create-notify");
+  });
+
   it("すべての値が文字列である", () => {
     for (const value of Object.values(SLACK_ROUTE)) {
       expect(typeof value).toBe("string");
