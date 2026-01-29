@@ -27,7 +27,7 @@ async function executeMainProcess() {
 
   // サマリー生成用データが存在しない場合は、初期化プロセスを実行
   if (!parsedJobData || !("originalVersions" in parsedJobData)) {
-    initializeSummaryDataProcess();
+    await initializeSummaryDataProcess();
     return;
   }
   const jobData = parsedJobData as JobDataForSummaryJob;
@@ -37,7 +37,7 @@ async function executeMainProcess() {
 
   // 前回実行時のタイムスタンプを読み取る（存在しない場合 or 日時が無効な場合は1週間前）
   const timestampISOString =
-    jobData.timestamp && !Number.isNaN(new Date(jobData.timestamp))
+    jobData.timestamp && !Number.isNaN(new Date(jobData.timestamp).getTime())
       ? jobData.timestamp
       : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 

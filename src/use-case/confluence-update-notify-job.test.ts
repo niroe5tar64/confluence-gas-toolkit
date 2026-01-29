@@ -10,7 +10,7 @@ describe("confluenceUpdateNotifyJob", () => {
     // 各サービス関数をモック
     spyOn(services, "isJobExecutionAllowed").mockReturnValue(true);
     spyOn(services, "parseJobData").mockReturnValue({ timestamp: new Date().toISOString() });
-    spyOn(services, "fetchRecentChanges").mockResolvedValue({
+    const fetchRecentChangesSpy = spyOn(services, "fetchRecentChanges").mockResolvedValue({
       results: [],
       _links: { base: "https://confluence.example.com" },
     });
@@ -60,6 +60,21 @@ describe("confluenceUpdateNotifyJob", () => {
     expect(sendSlackMessageSpy).toHaveBeenCalled();
     const callArgs = sendSlackMessageSpy.mock.calls[0];
     expect(callArgs[1]).toBe(SLACK_ROUTE.confluenceUpdateNotifyJob);
+  });
+
+  it("無効なタイムスタンプの場合はフォールバックした日時で検索する", async () => {
+    spyOn(services, "parseJobData").mockReturnValue({ timestamp: "invalid" });
+    const fetchRecentChangesSpy = spyOn(services, "fetchRecentChanges").mockResolvedValue({
+      results: [],
+      _links: { base: "https://confluence.example.com" },
+    });
+
+    const { confluenceUpdateNotifyJob } = await import("./confluence-update-notify-job");
+    await confluenceUpdateNotifyJob();
+
+    const callArgs = fetchRecentChangesSpy.mock.calls[0];
+    const timestampISOString = callArgs[0] as string;
+    expect(Number.isNaN(new Date(timestampISOString).getTime())).toBe(false);
   });
 
   it("エラー時に sendSlackException は SLACK_ROUTE.confluenceUpdateNotifyJob のキーで呼び出される", async () => {

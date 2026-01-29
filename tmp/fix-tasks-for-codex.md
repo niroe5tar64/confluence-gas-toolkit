@@ -9,8 +9,8 @@
 ## 進捗チェックリスト
 
 ### 🔴 Critical（必須）
-- [ ] Task 1: タイムスタンプ判定バグの修正
-- [ ] Task 2: await 忘れの修正
+- [x] Task 1: タイムスタンプ判定バグの修正
+- [x] Task 2: await 忘れの修正
 
 ### 🟠 High（重要）
 - [ ] Task 3: diff URL パラメータの修正

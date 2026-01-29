@@ -2,6 +2,16 @@ import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from "bun:te
 import { SLACK_ROUTE } from "~/config";
 import * as services from "~/services";
 
+const createDeferred = <T,>() => {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
+};
+
 describe("confluenceUpdateSummaryJob", () => {
   let sendSlackMessageSpy: ReturnType<typeof spyOn>;
   let sendSlackExceptionSpy: ReturnType<typeof spyOn>;
@@ -45,6 +55,46 @@ describe("confluenceUpdateSummaryJob", () => {
     expect(sendSlackMessageSpy).toHaveBeenCalled();
     const callArgs = sendSlackMessageSpy.mock.calls[0];
     expect(callArgs[1]).toBe(SLACK_ROUTE.confluenceUpdateSummaryJob);
+  });
+
+  it("無効なタイムスタンプの場合はフォールバックした日時で検索する", async () => {
+    spyOn(services, "parseJobData").mockReturnValue({
+      timestamp: "invalid",
+      originalVersions: {},
+    });
+    const fetchRecentChangesSpy = spyOn(services, "fetchRecentChanges").mockResolvedValue({
+      results: [],
+      _links: { base: "https://confluence.example.com" },
+    });
+
+    const { confluenceUpdateSummaryJob } = await import("./confluence-update-summary-job");
+    await confluenceUpdateSummaryJob();
+
+    const callArgs = fetchRecentChangesSpy.mock.calls[0];
+    const timestampISOString = callArgs[0] as string;
+    expect(Number.isNaN(new Date(timestampISOString).getTime())).toBe(false);
+  });
+
+  it("サマリーデータ初期化を完了するまで待機する", async () => {
+    spyOn(services, "parseJobData").mockReturnValue(undefined);
+    const fetchAllPagesDeferred = createDeferred<{
+      results: Array<{ id: string; version?: { number?: number } }>;
+    }>();
+    spyOn(services, "fetchAllPages").mockReturnValue(fetchAllPagesDeferred.promise);
+
+    const { confluenceUpdateSummaryJob } = await import("./confluence-update-summary-job");
+    let settled = false;
+    const jobPromise = confluenceUpdateSummaryJob().then(() => {
+      settled = true;
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(settled).toBe(false);
+
+    fetchAllPagesDeferred.resolve({ results: [] });
+    await jobPromise;
+
+    expect(services.updateJobData).toHaveBeenCalled();
   });
 
   it("エラー時に sendSlackException は SLACK_ROUTE.confluenceUpdateSummaryJob のキーで呼び出される", async () => {
