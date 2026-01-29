@@ -185,25 +185,14 @@ export default class ConfluenceClient extends HttpClient {
   /**
    * ConfluenceClient のシングルトンインスタンスを取得する。
    *
-   * 初回呼び出し時にインスタンスを生成し、以降は同じインスタンスを返す。
-   * 環境変数から必要な設定値を取得してインスタンスを初期化する。
-   *
    * @returns {ConfluenceClient} ConfluenceClient のシングルトンインスタンス
-   * @throws {Error} 環境変数が正しく設定されていない場合にスローされる
-   * @deprecated getConfluenceClient() を使用してください
+   * @throws {Error} このメソッドは廃止されました
+   * @deprecated getConfluenceClient(jobName) を使用してください
    */
   public static getInstance(): ConfluenceClient {
-    if (!ConfluenceClient.instance) {
-      const baseUrl = getEnvVariable("CONFLUENCE_URL") || "";
-      const token = getEnvVariable("CONFLUENCE_PAT") || "";
-      const spaceKey = getEnvVariable("SPACE_KEY") || "";
-      const rootPageId = getEnvVariable("ROOT_PAGE_ID") || "";
-      if (!baseUrl || !token || !spaceKey || !rootPageId) {
-        throw new Error("環境変数が正しく設定されていません。");
-      }
-      ConfluenceClient.instance = new ConfluenceClient(baseUrl, token, spaceKey, rootPageId);
-    }
-    return ConfluenceClient.instance;
+    throw new Error(
+      "getInstance() は廃止されました。getConfluenceClient(jobName) を使用してください。",
+    );
   }
 
   /**

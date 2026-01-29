@@ -29,6 +29,6 @@ src/index.ts → use-case/ → services/ → clients/
 
 - **デュアル環境**: GASとローカル両方で動作（HttpClient, getEnvVariable が環境を自動判定）
 - **コメントは日本語**
-- **パスエイリアス**: `~/clients`, `~/services`, `~/types`, `~/use-case`, `~/utils`
+- **パスエイリアス**: `~/clients`, `~/config`, `~/services`, `~/types`, `~/use-case`, `~/utils`
 
 詳細は `.claude/rules/` を参照。

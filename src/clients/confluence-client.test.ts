@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, spyOn } from "bun:test";
 import * as utils from "~/utils";
-import { getConfluenceClient, resetConfluenceClientCache } from "./confluence-client";
+import ConfluenceClient, { getConfluenceClient, resetConfluenceClientCache } from "./confluence-client";
 
 describe("getConfluenceClient", () => {
   let getEnvVariableSpy: ReturnType<typeof spyOn>;
@@ -345,6 +345,14 @@ describe("getConfluenceClient", () => {
       // 型検証に失敗するため、後方互換性で処理される
       const client = getConfluenceClient("confluenceUpdateNotifyJob");
       expect(client).toBeDefined();
+    });
+  });
+
+  describe("廃止されたAPI", () => {
+    it("getInstance() は例外をスローする", () => {
+      expect(() => ConfluenceClient.getInstance()).toThrow(
+        "getInstance() は廃止されました。getConfluenceClient(jobName) を使用してください。",
+      );
     });
   });
 });

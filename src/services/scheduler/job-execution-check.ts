@@ -7,10 +7,12 @@ import { jobExecutionPolicy } from "./job-schedule-config";
  *
  * ジョブ名に対応する実行ポリシー（`jobExecutionPolicy`）を参照し、
  * 現在の日時がそのポリシーの条件に一致するかを判定します。
+ * ポリシーが未定義のジョブの場合は、常に実行可能（`true`）を返します。
  *
  * @param {JobName} jobName - 実行可能かどうかを判定するジョブの名前。
  *   - 例: `"confluenceUpdateNotifyJob"`
  * @returns {boolean} - ジョブが現在の日時に実行可能であれば `true`、そうでなければ `false`。
+ *   ポリシー未定義の場合は常に `true`。
  *
  * @example
  * if (isJobExecutionAllowed("confluenceUpdateNotifyJob")) {
@@ -20,8 +22,15 @@ import { jobExecutionPolicy } from "./job-schedule-config";
  * }
  */
 export function isJobExecutionAllowed(jobName: JobName) {
+  const policy = jobExecutionPolicy[jobName];
+
+  // ポリシーが未定義の場合は常に実行可能とする
+  if (!policy) {
+    return true;
+  }
+
   const now = new Date();
-  return jobExecutionPolicy[jobName].executableConditions.some((condition) =>
+  return policy.executableConditions.some((condition) =>
     isJobExecutionTime(now, condition),
   );
 }

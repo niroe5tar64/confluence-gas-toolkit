@@ -16,7 +16,7 @@ src/services/       → ビジネスロジック
   ├─ confluence-slack/ → ペイロード変換（Confluence→Slack）
   ├─ scheduler/     → 時間ベースの実行ルール
   └─ io/            → ジョブ状態の永続化
-src/clients/        → APIクライアント（シングルトン）
+src/clients/        → APIクライアント（レジストリパターン）
   ├─ http-client.ts → デュアル環境対応基底クラス
   ├─ confluence-client.ts
   └─ slack-client.ts
@@ -27,7 +27,7 @@ src/utils/          → ユーティリティ
 ## パスエイリアス
 
 tsconfig.json & vite.config.ts で設定済み：
-- `~/clients`, `~/services`, `~/types`, `~/use-case`, `~/utils`
+- `~/clients`, `~/config`, `~/services`, `~/types`, `~/use-case`, `~/utils`
 
 ## デュアル環境対応
 

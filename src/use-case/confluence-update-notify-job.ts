@@ -52,15 +52,14 @@ async function executeMainProcess() {
   );
 
   // Confluence API から取得した検索結果を時系列順に並べ替え、
-  // 各結果を Slack メッセージのペイロードに変換して送信します。
+  // 各結果を Slack メッセージのペイロードに変換して順次送信します。
+  // 逐次送信により、Slack チャンネル上での表示順序を保証します。
   const sortedSearchResults = sortSearchResultsByUpdatedAtAsc(recentChangePages.results);
   const baseUrl = recentChangePages._links?.base || "";
-  await Promise.all(
-    sortedSearchResults.map(async (result: Confluence.SearchResult) => {
-      const payload = convertSearchResultToMessagePayload(result, baseUrl);
-      await sendSlackMessage(payload, TARGET_KEY);
-    }),
-  );
+  for (const result of sortedSearchResults) {
+    const payload = convertSearchResultToMessagePayload(result, baseUrl);
+    await sendSlackMessage(payload, TARGET_KEY);
+  }
 
   // 最も最近の更新日時を特定し次回以降の差分取得に備えてタイムスタンプを保存する
   const updatedAtList: Date[] = recentChangePages.results

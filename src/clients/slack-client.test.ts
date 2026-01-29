@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
 import * as utils from "~/utils";
-import { getSlackClient, resetSlackClientCache } from "./slack-client";
+import SlackClient, { getSlackClient, resetSlackClientCache } from "./slack-client";
 
 describe("getSlackClient", () => {
   let getEnvVariableSpy: ReturnType<typeof spyOn>;
@@ -73,6 +73,14 @@ describe("getSlackClient", () => {
       getEnvVariableSpy.mockReturnValue("");
 
       expect(() => getSlackClient("any-key")).toThrow("SLACK_WEBHOOK_URLS が設定されていません");
+    });
+  });
+
+  describe("廃止されたAPI", () => {
+    it("getInstance() は例外をスローする", () => {
+      expect(() => SlackClient.getInstance()).toThrow(
+        "getInstance() は廃止されました。getSlackClient(targetKey) を使用してください。",
+      );
     });
   });
 });

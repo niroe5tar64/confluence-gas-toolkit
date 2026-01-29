@@ -100,10 +100,13 @@ export default class SlackClient extends HttpClient {
   /**
    * SlackClient のシングルトンインスタンスを取得する。
    * @returns {SlackClient} - SlackClient のインスタンス
-   * @deprecated getSlackClient() を使用してください
+   * @throws {Error} このメソッドは廃止されました
+   * @deprecated getSlackClient(targetKey) を使用してください
    */
   public static getInstance(): SlackClient {
-    return getSlackClient("DEFAULT");
+    throw new Error(
+      "getInstance() は廃止されました。getSlackClient(targetKey) を使用してください。",
+    );
   }
 
   /**

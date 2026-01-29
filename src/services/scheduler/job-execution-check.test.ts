@@ -1,6 +1,6 @@
-import { describe, expect, it } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it, spyOn } from "bun:test";
 import type { JobExecutableCondition } from "~/types";
-import { isJobExecutionTime } from "./job-execution-check";
+import { isJobExecutionAllowed, isJobExecutionTime } from "./job-execution-check";
 
 describe("isJobExecutionTime", () => {
   // 平日 8:00 ~ 19:00 の条件（実際の設定と同じ）
@@ -146,6 +146,52 @@ describe("isJobExecutionTime", () => {
       const monday = new Date("2024-01-15T12:00:00");
 
       expect(isJobExecutionTime(monday, noAllowedDaysCondition)).toBe(false);
+    });
+  });
+});
+
+describe("isJobExecutionAllowed", () => {
+  describe("ポリシーが定義されているジョブ", () => {
+    it("should return true for confluenceUpdateNotifyJob during allowed time", () => {
+      // 月曜日 12:00（平日営業時間内）をモック
+      const mockDate = new Date("2024-01-15T12:00:00");
+      const spy = spyOn(global, "Date").mockImplementation(() => mockDate);
+
+      expect(isJobExecutionAllowed("confluenceUpdateNotifyJob")).toBe(true);
+
+      spy.mockRestore();
+    });
+
+    it("should return false for confluenceUpdateNotifyJob outside allowed time", () => {
+      // 土曜日 12:00（週末）をモック
+      const mockDate = new Date("2024-01-20T12:00:00");
+      const spy = spyOn(global, "Date").mockImplementation(() => mockDate);
+
+      expect(isJobExecutionAllowed("confluenceUpdateNotifyJob")).toBe(false);
+
+      spy.mockRestore();
+    });
+
+    it("should return false for confluenceUpdateNotifyJob before business hours", () => {
+      // 月曜日 7:00（営業時間前）をモック
+      const mockDate = new Date("2024-01-15T07:00:00");
+      const spy = spyOn(global, "Date").mockImplementation(() => mockDate);
+
+      expect(isJobExecutionAllowed("confluenceUpdateNotifyJob")).toBe(false);
+
+      spy.mockRestore();
+    });
+  });
+
+  describe("ポリシーが未定義のジョブ", () => {
+    it("should return true for confluenceUpdateSummaryJob (no policy defined)", () => {
+      // ポリシー未定義のジョブは常に実行可能
+      expect(isJobExecutionAllowed("confluenceUpdateSummaryJob")).toBe(true);
+    });
+
+    it("should return true for confluenceCreateNotifyJob (no policy defined)", () => {
+      // ポリシー未定義のジョブは常に実行可能
+      expect(isJobExecutionAllowed("confluenceCreateNotifyJob")).toBe(true);
     });
   });
 });
