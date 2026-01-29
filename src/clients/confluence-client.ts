@@ -1,7 +1,146 @@
 import type { Confluence } from "~/types";
+import type { JobName } from "~/types";
 import { getEnvVariable, toQueryString } from "~/utils";
 
 import HttpClient from "./http-client";
+
+/**
+ * ページ設定の型定義
+ */
+interface PageConfig {
+  rootPageIds: string[];
+  spaceKey: string;
+}
+
+// ページ設定のキャッシュ
+let cachedPageConfigs: Record<JobName, PageConfig> | null = null;
+
+// ジョブごとのクライアントインスタンスレジストリ
+const clientsMap = new Map<JobName, ConfluenceClient>();
+
+/**
+ * 値が PageConfig 型かどうかを検証
+ */
+function isPageConfig(value: unknown): value is PageConfig {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "rootPageIds" in value &&
+    Array.isArray((value as PageConfig).rootPageIds) &&
+    (value as PageConfig).rootPageIds.every((id) => typeof id === "string") &&
+    "spaceKey" in value &&
+    typeof (value as PageConfig).spaceKey === "string"
+  );
+}
+
+/**
+ * 値が Record<JobName, PageConfig> 型かどうかを検証
+ */
+function isPageConfigRecord(value: unknown): value is Record<JobName, PageConfig> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const record = value as Record<string, unknown>;
+  const jobNames: JobName[] = [
+    "confluenceUpdateNotifyJob",
+    "confluenceUpdateSummaryJob",
+    "confluenceCreateNotifyJob",
+  ];
+  return jobNames.every((jobName) => jobName in record && isPageConfig(record[jobName]));
+}
+
+/**
+ * ページ設定をパースして返す
+ * 後方互換性を保つため、CONFLUENCE_PAGE_CONFIGSが未設定の場合は
+ * 既存の環境変数（ROOT_PAGE_ID, SPACE_KEY）から生成
+ */
+function getPageConfigs(): Record<JobName, PageConfig> {
+  if (cachedPageConfigs) {
+    return cachedPageConfigs;
+  }
+
+  const raw = getEnvVariable("CONFLUENCE_PAGE_CONFIGS");
+  if (raw) {
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      if (isPageConfigRecord(parsed)) {
+        cachedPageConfigs = parsed;
+        return cachedPageConfigs;
+      }
+      // 型検証失敗時は後方互換性で処理
+      console.warn("CONFLUENCE_PAGE_CONFIGS の形式が不正です。後方互換モードで処理します。");
+    } catch {
+      // JSON パース失敗時は後方互換性で処理
+      console.warn("CONFLUENCE_PAGE_CONFIGS のパースに失敗しました。後方互換モードで処理します。");
+    }
+  }
+
+  // 後方互換性：既存環境変数から生成（単一ページ）
+  const rootPageId = getEnvVariable("ROOT_PAGE_ID") || "";
+  const spaceKey = getEnvVariable("SPACE_KEY") || "";
+  const defaultConfig: PageConfig = {
+    rootPageIds: rootPageId ? [rootPageId] : [],
+    spaceKey,
+  };
+
+  cachedPageConfigs = {
+    confluenceUpdateNotifyJob: defaultConfig,
+    confluenceUpdateSummaryJob: defaultConfig,
+    confluenceCreateNotifyJob: defaultConfig,
+  };
+
+  return cachedPageConfigs;
+}
+
+/**
+ * ジョブ名に対応する ConfluenceClient インスタンスを取得する
+ * キャッシュされたインスタンスがあれば、それを返す
+ *
+ * @param {JobName} jobName - ジョブ名
+ * @returns {ConfluenceClient} ConfluenceClient のインスタンス
+ * @throws {Error} ページ設定が見つからない場合、またはConfluence認証情報が未設定の場合
+ */
+export function getConfluenceClient(jobName: JobName): ConfluenceClient {
+  const cached = clientsMap.get(jobName);
+  if (cached) {
+    return cached;
+  }
+
+  const configs = getPageConfigs();
+  const config = configs[jobName];
+  if (!config?.rootPageIds?.length || !config?.spaceKey) {
+    throw new Error(`ジョブ ${jobName} の設定が見つかりません`);
+  }
+
+  const baseUrl = getEnvVariable("CONFLUENCE_URL") || "";
+  const token = getEnvVariable("CONFLUENCE_PAT") || "";
+  if (!baseUrl || !token) {
+    throw new Error("環境変数が正しく設定されていません。");
+  }
+
+  // 複数ページ対応：第1ページをメインのrootPageIdとして使用
+  const client = new ConfluenceClient(
+    baseUrl,
+    token,
+    config.spaceKey,
+    config.rootPageIds[0],
+    config.rootPageIds,
+  );
+
+  clientsMap.set(jobName, client);
+  return client;
+}
+
+/**
+ * テスト用: キャッシュをリセット
+ * getConfluenceClient() と getInstance() の両方のキャッシュをクリアする
+ * @internal
+ */
+export function resetConfluenceClientCache(): void {
+  cachedPageConfigs = null;
+  clientsMap.clear();
+  ConfluenceClient.resetInstance();
+}
 
 /**
  * Confluence API クライアント
@@ -17,6 +156,7 @@ export default class ConfluenceClient extends HttpClient {
   private token: string;
   private spaceKey: string;
   private rootPageId: string;
+  private rootPageIds: string[];
 
   /**
    * Confluence クライアントのインスタンスを作成する。
@@ -24,14 +164,22 @@ export default class ConfluenceClient extends HttpClient {
    * @param {string} baseUrl - Confluence API のベース URL (例: `"https://your-domain.atlassian.net/wiki"`)
    * @param {string} token - API リクエストに使用する Bearer トークン
    * @param {string} spaceKey - 対象となる Confluence の Space Key
-   * @param {string} rootPageId - 対象となる Confluence Page の ID
+   * @param {string} rootPageId - 対象となる Confluence Page の ID (複数ページ指定時はメインのページID)
+   * @param {string[]} [rootPageIds] - 複数ページ対応：すべての対象ページIDの配列
    */
-  private constructor(baseUrl: string, token: string, spaceKey: string, rootPageId: string) {
+  private constructor(
+    baseUrl: string,
+    token: string,
+    spaceKey: string,
+    rootPageId: string,
+    rootPageIds?: string[],
+  ) {
     super();
     this.baseUrl = baseUrl;
     this.token = token;
     this.spaceKey = spaceKey;
     this.rootPageId = rootPageId;
+    this.rootPageIds = rootPageIds || [rootPageId];
   }
 
   /**
@@ -42,6 +190,7 @@ export default class ConfluenceClient extends HttpClient {
    *
    * @returns {ConfluenceClient} ConfluenceClient のシングルトンインスタンス
    * @throws {Error} 環境変数が正しく設定されていない場合にスローされる
+   * @deprecated getConfluenceClient() を使用してください
    */
   public static getInstance(): ConfluenceClient {
     if (!ConfluenceClient.instance) {
@@ -55,6 +204,14 @@ export default class ConfluenceClient extends HttpClient {
       ConfluenceClient.instance = new ConfluenceClient(baseUrl, token, spaceKey, rootPageId);
     }
     return ConfluenceClient.instance;
+  }
+
+  /**
+   * テスト用: シングルトンインスタンスをリセット
+   * @internal
+   */
+  public static resetInstance(): void {
+    ConfluenceClient.instance = null;
   }
 
   /**
@@ -136,6 +293,7 @@ export default class ConfluenceClient extends HttpClient {
    *
    * Confluence API の検索エンドポイントに GET リクエストを送信し、
    * クエリに一致するページを取得します。
+   * 複数のrootPageIdsが指定されている場合、OR条件で結合します。
    *
    * @param {Object} request - 検索クエリを含むオブジェクト。
    * @param {string} request.extraCql - 追加の Confluence Query Language（CQL）条件。
@@ -157,8 +315,14 @@ export default class ConfluenceClient extends HttpClient {
     const cqlList = [
       "type=page", // ページコンテンツのみ取得
       `space=${this.spaceKey}`, // 対象となるスペースのページのみ取得
-      `ancestor=${this.rootPageId}`, // 監視ページ配下の全ページを対象とする
     ];
+
+    // 複数ページ対応：OR条件で結合
+    if (this.rootPageIds.length > 0) {
+      const ancestorCql = this.rootPageIds.map((id) => `ancestor=${id}`).join(" OR ");
+      cqlList.push(`(${ancestorCql})`);
+    }
+
     if (request.extraCql) {
       cqlList.push(request.extraCql);
     }

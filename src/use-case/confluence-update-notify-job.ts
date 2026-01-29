@@ -46,7 +46,10 @@ async function executeMainProcess() {
       : new Date(Date.now() - 15 * 60 * 1000).toISOString();
 
   // タイムスタンプ以降に更新されたページ一覧を取得（最大 limit 件まで）
-  const recentChangePages = await fetchRecentChanges(timestampISOString);
+  const recentChangePages = await fetchRecentChanges(
+    timestampISOString,
+    "confluenceUpdateNotifyJob",
+  );
 
   // Confluence API から取得した検索結果を時系列順に並べ替え、
   // 各結果を Slack メッセージのペイロードに変換して送信します。

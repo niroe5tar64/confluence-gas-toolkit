@@ -42,7 +42,10 @@ async function executeMainProcess() {
       : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
   // タイムスタンプ以降に更新されたページ一覧を取得（最大 limit 件まで）
-  const recentChangePages = await fetchRecentChanges(timestampISOString);
+  const recentChangePages = await fetchRecentChanges(
+    timestampISOString,
+    "confluenceUpdateSummaryJob",
+  );
 
   if (recentChangePages.results.length === 0) {
     console.log("最近の変更はありません。");
@@ -74,7 +77,7 @@ async function executeMainProcess() {
 
 // サマリー生成用データの初期化プロセス
 async function initializeSummaryDataProcess() {
-  const searchPages = await fetchAllPages();
+  const searchPages = await fetchAllPages("confluenceUpdateSummaryJob");
   const pages = searchPages.results.map((result) => ({
     pageId: result.id,
     originalVersion: result.version?.number ?? 1,
