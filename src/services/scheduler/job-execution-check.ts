@@ -30,9 +30,7 @@ export function isJobExecutionAllowed(jobName: JobName) {
   }
 
   const now = new Date();
-  return policy.executableConditions.some((condition) =>
-    isJobExecutionTime(now, condition),
-  );
+  return policy.executableConditions.some((condition) => isJobExecutionTime(now, condition));
 }
 
 /**

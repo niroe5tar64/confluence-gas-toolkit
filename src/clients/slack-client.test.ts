@@ -87,12 +87,14 @@ describe("getSlackClient", () => {
   describe("SlackClient.send", () => {
     it("HTTP エラー時に例外をスローする", async () => {
       const client = new SlackClient("https://hooks.slack.com/services/AAA");
-      const httpRequestSpy = spyOn(client as unknown as { httpRequest: typeof client["httpRequest"] }, "httpRequest")
-        .mockResolvedValue({
-          ok: false,
-          status: 500,
-          statusText: "Internal Server Error",
-        } as Response);
+      const httpRequestSpy = spyOn(
+        client as unknown as { httpRequest: (typeof client)["httpRequest"] },
+        "httpRequest",
+      ).mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: "Internal Server Error",
+      } as Response);
 
       await expect(client.send({ text: "test message" })).rejects.toThrow(
         "Slack送信失敗: 500 Internal Server Error",

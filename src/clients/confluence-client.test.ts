@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, spyOn } from "bun:test";
 import * as utils from "~/utils";
-import ConfluenceClient, { getConfluenceClient, resetConfluenceClientCache } from "./confluence-client";
+import ConfluenceClient, {
+  getConfluenceClient,
+  resetConfluenceClientCache,
+} from "./confluence-client";
 
 describe("getConfluenceClient", () => {
   let getEnvVariableSpy: ReturnType<typeof spyOn>;
@@ -368,18 +371,22 @@ describe("getConfluenceClient", () => {
 
   describe("ConfluenceClient.getSearchPage", () => {
     it("rootPageIds が空の場合は空の結果を返す", async () => {
-      const client = new (ConfluenceClient as unknown as {
-        new (
-          baseUrl: string,
-          token: string,
-          spaceKey: string,
-          rootPageId: string,
-          rootPageIds?: string[],
-        ): ConfluenceClient;
-      })("https://confluence.example.com", "token", "SPACE", "root", []);
+      const client = new (
+        ConfluenceClient as unknown as {
+          new (
+            baseUrl: string,
+            token: string,
+            spaceKey: string,
+            rootPageId: string,
+            rootPageIds?: string[],
+          ): ConfluenceClient;
+        }
+      )("https://confluence.example.com", "token", "SPACE", "root", []);
 
-      const callApiSpy = spyOn(client as unknown as { callApi: typeof client["callApi"] }, "callApi")
-        .mockResolvedValue({ results: [{ id: "should-not-be-called" }] } as unknown);
+      const callApiSpy = spyOn(
+        client as unknown as { callApi: (typeof client)["callApi"] },
+        "callApi",
+      ).mockResolvedValue({ results: [{ id: "should-not-be-called" }] } as unknown);
 
       const result = await client.getSearchPage({});
 

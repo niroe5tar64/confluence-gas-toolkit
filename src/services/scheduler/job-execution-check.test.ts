@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, spyOn } from "bun:test";
 import type { JobExecutableCondition } from "~/types";
 import { isJobExecutionAllowed, isJobExecutionTime } from "./job-execution-check";
 
+const OriginalDate = Date;
+
 describe("isJobExecutionTime", () => {
   // 平日 8:00 ~ 19:00 の条件（実際の設定と同じ）
   const weekdayBusinessHours: JobExecutableCondition = {
@@ -155,7 +157,12 @@ describe("isJobExecutionAllowed", () => {
     it("should return true for confluenceUpdateNotifyJob during allowed time", () => {
       // 月曜日 12:00（平日営業時間内）をモック
       const mockDate = new Date("2024-01-15T12:00:00");
-      const spy = spyOn(global, "Date").mockImplementation(() => mockDate);
+      const spy = spyOn(globalThis, "Date" as unknown as "Date").mockImplementation(((
+        ...args: ConstructorParameters<DateConstructor>
+      ) =>
+        args.length === 0
+          ? new OriginalDate(mockDate)
+          : new OriginalDate(...args)) as unknown as DateConstructor);
 
       expect(isJobExecutionAllowed("confluenceUpdateNotifyJob")).toBe(true);
 
@@ -165,7 +172,12 @@ describe("isJobExecutionAllowed", () => {
     it("should return false for confluenceUpdateNotifyJob outside allowed time", () => {
       // 土曜日 12:00（週末）をモック
       const mockDate = new Date("2024-01-20T12:00:00");
-      const spy = spyOn(global, "Date").mockImplementation(() => mockDate);
+      const spy = spyOn(globalThis, "Date" as unknown as "Date").mockImplementation(((
+        ...args: ConstructorParameters<DateConstructor>
+      ) =>
+        args.length === 0
+          ? new OriginalDate(mockDate)
+          : new OriginalDate(...args)) as unknown as DateConstructor);
 
       expect(isJobExecutionAllowed("confluenceUpdateNotifyJob")).toBe(false);
 
@@ -175,7 +187,12 @@ describe("isJobExecutionAllowed", () => {
     it("should return false for confluenceUpdateNotifyJob before business hours", () => {
       // 月曜日 7:00（営業時間前）をモック
       const mockDate = new Date("2024-01-15T07:00:00");
-      const spy = spyOn(global, "Date").mockImplementation(() => mockDate);
+      const spy = spyOn(globalThis, "Date" as unknown as "Date").mockImplementation(((
+        ...args: ConstructorParameters<DateConstructor>
+      ) =>
+        args.length === 0
+          ? new OriginalDate(mockDate)
+          : new OriginalDate(...args)) as unknown as DateConstructor);
 
       expect(isJobExecutionAllowed("confluenceUpdateNotifyJob")).toBe(false);
 

@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
 import { SLACK_ROUTE } from "~/config";
 import * as services from "~/services";
+import type { Confluence } from "~/types";
 
-const createDeferred = <T,>() => {
+const createDeferred = <T>() => {
   let resolve!: (value: T) => void;
   let reject!: (reason?: unknown) => void;
   const promise = new Promise<T>((resolvePromise, rejectPromise) => {
@@ -76,10 +77,8 @@ describe("confluenceUpdateSummaryJob", () => {
   });
 
   it("サマリーデータ初期化を完了するまで待機する", async () => {
-    spyOn(services, "parseJobData").mockReturnValue(undefined);
-    const fetchAllPagesDeferred = createDeferred<{
-      results: Array<{ id: string; version?: { number?: number } }>;
-    }>();
+    spyOn(services, "parseJobData").mockReturnValue(null);
+    const fetchAllPagesDeferred = createDeferred<Confluence.SearchPage>();
     spyOn(services, "fetchAllPages").mockReturnValue(fetchAllPagesDeferred.promise);
 
     const { confluenceUpdateSummaryJob } = await import("./confluence-update-summary-job");
@@ -91,7 +90,13 @@ describe("confluenceUpdateSummaryJob", () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(settled).toBe(false);
 
-    fetchAllPagesDeferred.resolve({ results: [] });
+    fetchAllPagesDeferred.resolve({
+      results: [],
+      _links: { base: "https://confluence.example.com" },
+      start: 0,
+      limit: 0,
+      size: 0,
+    });
     await jobPromise;
 
     expect(services.updateJobData).toHaveBeenCalled();

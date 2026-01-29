@@ -27,7 +27,11 @@ describe("convertSearchResultsToSummaryPayload", () => {
       },
     ];
 
-    const payload = convertSearchResultsToSummaryPayload(searchResults, { "123": 1 }, "https://example.atlassian.net/wiki");
+    const payload = convertSearchResultsToSummaryPayload(
+      searchResults,
+      { "123": 1 },
+      "https://example.atlassian.net/wiki",
+    );
     const payloadText = JSON.stringify(payload);
 
     expect(payloadText).toContain("originalVersion=1");

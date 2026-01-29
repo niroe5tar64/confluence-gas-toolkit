@@ -123,10 +123,10 @@ export function getConfluenceClient(jobName: JobName): ConfluenceClient {
 
   const baseUrl = getEnvVariable("CONFLUENCE_URL");
   const token = getEnvVariable("CONFLUENCE_PAT");
-  const missingEnv = [];
-  if (!baseUrl) missingEnv.push("CONFLUENCE_URL");
-  if (!token) missingEnv.push("CONFLUENCE_PAT");
-  if (missingEnv.length > 0) {
+  if (!baseUrl || !token) {
+    const missingEnv = [];
+    if (!baseUrl) missingEnv.push("CONFLUENCE_URL");
+    if (!token) missingEnv.push("CONFLUENCE_PAT");
     throw new Error(`必須環境変数が未設定です: ${missingEnv.join(", ")}`);
   }
 
@@ -179,7 +179,7 @@ export default class ConfluenceClient extends HttpClient {
    * @param {string} rootPageId - 対象となる Confluence Page の ID (複数ページ指定時はメインのページID)
    * @param {string[]} [rootPageIds] - 複数ページ対応：すべての対象ページIDの配列
    */
-  private constructor(
+  public constructor(
     baseUrl: string,
     token: string,
     spaceKey: string,

@@ -42,9 +42,7 @@ async function executeMainProcess() {
     "confluenceCreateNotifyJob",
   );
 
-  const createdPages = recentChangePages.results.filter(
-    (result) => result.version?.number === 1,
-  );
+  const createdPages = recentChangePages.results.filter((result) => result.version?.number === 1);
   const sortedSearchResults = sortSearchResultsByUpdatedAtAsc(createdPages);
   const baseUrl = recentChangePages._links?.base || "";
   for (const result of sortedSearchResults) {
