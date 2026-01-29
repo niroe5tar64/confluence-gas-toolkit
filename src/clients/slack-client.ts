@@ -3,28 +3,53 @@ import { getEnvVariable } from "~/utils";
 import HttpClient from "./http-client";
 
 // Webhook URL のキャッシュ
-let webhookUrls: Record<string, string> | null = null;
+let cachedWebhookUrls: Record<string, string> | null = null;
+
+/**
+ * 値が Record<string, string> 型かどうかを検証
+ */
+function isStringRecord(value: unknown): value is Record<string, string> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Object.values(value).every((v) => typeof v === "string")
+  );
+}
+
+/**
+ * 環境変数から Webhook URL マッピングを初期化
+ */
+function initializeWebhookUrls(): Record<string, string> {
+  const raw = getEnvVariable("SLACK_WEBHOOK_URLS");
+  if (raw) {
+    const parsed: unknown = JSON.parse(raw);
+
+    if (!isStringRecord(parsed)) {
+      throw new Error("SLACK_WEBHOOK_URLS の形式が不正です");
+    }
+
+    return parsed;
+  }
+
+  // 後方互換: 旧環境変数を DEFAULT として扱う
+  const legacyUrl = getEnvVariable("SLACK_WEBHOOK_URL");
+  if (legacyUrl) {
+    return { DEFAULT: legacyUrl };
+  }
+
+  throw new Error("SLACK_WEBHOOK_URLS が設定されていません");
+}
 
 /**
  * 環境変数から Webhook URL マッピングを取得
  * 後方互換: SLACK_WEBHOOK_URLS が未設定の場合は SLACK_WEBHOOK_URL を DEFAULT として扱う
  */
 function getWebhookUrls(): Record<string, string> {
-  if (!webhookUrls) {
-    const raw = getEnvVariable("SLACK_WEBHOOK_URLS");
-    if (raw) {
-      webhookUrls = JSON.parse(raw);
-    } else {
-      // 後方互換: 旧環境変数を DEFAULT として扱う
-      const legacyUrl = getEnvVariable("SLACK_WEBHOOK_URL");
-      if (legacyUrl) {
-        webhookUrls = { DEFAULT: legacyUrl };
-      } else {
-        throw new Error("SLACK_WEBHOOK_URLS が設定されていません");
-      }
-    }
+  if (!cachedWebhookUrls) {
+    cachedWebhookUrls = initializeWebhookUrls();
   }
-  return webhookUrls;
+  return cachedWebhookUrls;
 }
 
 // クライアントインスタンスのレジストリ
@@ -35,7 +60,7 @@ const clients = new Map<string, SlackClient>();
  * @internal
  */
 export function resetSlackClientCache(): void {
-  webhookUrls = null;
+  cachedWebhookUrls = null;
   clients.clear();
 }
 

@@ -63,7 +63,7 @@ async function executeMainProcess() {
   const updatedAtList: Date[] = recentChangePages.results
     .map((result) => result.version)
     .map((version) => version?.when)
-    .filter((when) => when !== undefined);
+    .filter((when): when is Date => when !== undefined);
   const latestUpdatedAt =
     updatedAtList.length > 0
       ? new Date(Math.max(...updatedAtList.map((date) => date.getTime())))

@@ -31,8 +31,9 @@ describe("confluenceUpdateNotifyJob", () => {
       results: [
         {
           id: "123",
+          type: "page",
           title: "Test Page",
-          version: { when: new Date(), number: 1 },
+          version: { when: new Date(), number: 1, by: { displayName: "Test User" } },
           _links: { webui: "/pages/123" },
         },
       ],
@@ -41,8 +42,9 @@ describe("confluenceUpdateNotifyJob", () => {
     spyOn(services, "sortSearchResultsByUpdatedAtAsc").mockReturnValue([
       {
         id: "123",
+        type: "page",
         title: "Test Page",
-        version: { when: new Date(), number: 1 },
+        version: { when: new Date(), number: 1, by: { displayName: "Test User" } },
         _links: { webui: "/pages/123" },
       },
     ]);

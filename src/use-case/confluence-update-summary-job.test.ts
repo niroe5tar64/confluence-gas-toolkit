@@ -16,8 +16,9 @@ describe("confluenceUpdateSummaryJob", () => {
       results: [
         {
           id: "123",
+          type: "page",
           title: "Test Page",
-          version: { when: new Date(), number: 2 },
+          version: { when: new Date(), number: 2, by: { displayName: "Test User" } },
           _links: { webui: "/pages/123" },
         },
       ],
