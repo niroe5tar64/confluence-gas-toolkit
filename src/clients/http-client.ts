@@ -1,38 +1,4 @@
 /**
- * RequestInit["headers"] から指定されたヘッダー値を取得する
- * Headers オブジェクト、配列、オブジェクトリテラルの全形式に対応
- *
- * @param headers - RequestInit["headers"] 形式のヘッダー
- * @param key - 取得するヘッダー名（大文字小文字を区別しない）
- * @returns ヘッダー値、存在しない場合は undefined
- */
-function getHeaderValue(headers: RequestInit["headers"], key: string): string | undefined {
-  if (!headers) return undefined;
-
-  const lowerKey = key.toLowerCase();
-
-  // Headers オブジェクトの場合
-  if (headers instanceof Headers) {
-    return headers.get(key) ?? undefined;
-  }
-
-  // 配列形式 [string, string][] の場合
-  if (Array.isArray(headers)) {
-    const found = headers.find(([k]) => k.toLowerCase() === lowerKey);
-    return found?.[1];
-  }
-
-  // オブジェクトリテラル Record<string, string> の場合
-  const record = headers as Record<string, string>;
-  for (const k of Object.keys(record)) {
-    if (k.toLowerCase() === lowerKey) {
-      return record[k];
-    }
-  }
-  return undefined;
-}
-
-/**
  * HTTP クライアントクラス
  *
  * Google Apps Script (GAS) 環境では `UrlFetchApp.fetch()` を使用し、
@@ -64,8 +30,6 @@ export default class HttpClient {
     }
 
     // GAS 環境
-    const headerContentType = getHeaderValue(options.headers, "Content-Type");
-
     const gasOptions: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: (options.method?.toLowerCase() || "get") as GoogleAppsScript.URL_Fetch.HttpMethod,
       headers: options.headers as Record<string, string>,
@@ -76,17 +40,15 @@ export default class HttpClient {
       if (typeof options.body === "string") {
         gasOptions.payload = options.body;
         // Slack Webhook など JSON 文字列を送るケースでもヘッダー指定を尊重する
-        gasOptions.contentType = headerContentType ?? "text/plain";
+        gasOptions.contentType = "text/plain";
       } else if (options.body instanceof Blob) {
         gasOptions.payload = options.body;
         gasOptions.contentType =
-          headerContentType ?? (options.body.type || "application/octet-stream");
+          (options.body.type || "application/octet-stream");
       } else {
         gasOptions.payload = JSON.stringify(options.body);
-        gasOptions.contentType = headerContentType ?? "application/json";
+        gasOptions.contentType = "application/json";
       }
-    } else if (headerContentType) {
-      gasOptions.contentType = headerContentType;
     }
 
     return UrlFetchApp.fetch(url, gasOptions);
