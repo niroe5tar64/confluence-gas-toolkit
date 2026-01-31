@@ -31,18 +31,28 @@ export async function confluenceCreateNotifyJob() {
 }
 
 async function executeMainProcess() {
+  // 前回実行時のタイムスタンプを読み取る（存在しない場合 or 日時が無効な場合は15分前）
   const jobData = parseJobData("confluence-create-notify-job.json");
   const timestampISOString =
     jobData?.timestamp && !Number.isNaN(new Date(jobData.timestamp).getTime())
       ? jobData.timestamp
       : new Date(Date.now() - 15 * 60 * 1000).toISOString();
 
+  // タイムスタンプ以降に更新されたページ一覧を取得
   const recentChangePages = await fetchRecentChanges(
     timestampISOString,
     "confluenceCreateNotifyJob",
   );
 
-  const createdPages = recentChangePages.results.filter((result) => result.version?.number === 1);
+  const createdAtThreshold = new Date(timestampISOString);
+  const createdPages = recentChangePages.results.filter((result) => {
+    const createdAt = result.history?.createdDate;
+    if (createdAt instanceof Date && !Number.isNaN(createdAt.getTime())) {
+      return createdAt.getTime() >= createdAtThreshold.getTime();
+    }
+    // fallback for responses without history.createdDate
+    return result.version?.number === 1;
+  });
   const sortedSearchResults = sortSearchResultsByUpdatedAtAsc(createdPages);
   const baseUrl = recentChangePages._links?.base || "";
   for (const result of sortedSearchResults) {

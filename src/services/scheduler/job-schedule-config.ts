@@ -27,4 +27,15 @@ export const jobExecutionPolicy: Record<string, JobExecutionRule> = {
       },
     ],
   },
+  confluenceCreateNotifyJob: {
+    name: "Confluence登録通知JOBの設定",
+    description: "平日 8:00 ~ 19:00",
+    executableConditions: [
+      {
+        allowedDays: [1, 2, 3, 4, 5],
+        startHour: 8,
+        endHour: 19,
+      },
+    ],
+  },
 };

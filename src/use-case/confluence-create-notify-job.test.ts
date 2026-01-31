@@ -60,7 +60,9 @@ describe("confluenceCreateNotifyJob", () => {
     expect(callArgs[1]).toBe(SLACK_ROUTE.confluenceCreateNotifyJob);
   });
 
-  it("新規作成ページ（version=1）のみ通知する", async () => {
+  it("作成日時がしきい値以降のページのみ通知する", async () => {
+    const createdAfterThreshold = new Date(Date.now() + 60 * 1000);
+    const createdBeforeThreshold = new Date(Date.now() - 60 * 1000);
     const fetchRecentChangesSpy = spyOn(services, "fetchRecentChanges").mockResolvedValue({
       results: [
         {
@@ -68,6 +70,7 @@ describe("confluenceCreateNotifyJob", () => {
           type: "page",
           title: "Created Page",
           version: { when: new Date(), number: 1, by: { displayName: "User A" } },
+          history: { createdDate: createdAfterThreshold },
           _links: { webui: "/pages/1" },
         },
         {
@@ -75,6 +78,7 @@ describe("confluenceCreateNotifyJob", () => {
           type: "page",
           title: "Updated Page",
           version: { when: new Date(), number: 2, by: { displayName: "User B" } },
+          history: { createdDate: createdBeforeThreshold },
           _links: { webui: "/pages/2" },
         },
       ],

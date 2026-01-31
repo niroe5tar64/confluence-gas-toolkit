@@ -45,7 +45,7 @@ async function executeMainProcess() {
       ? jobData?.timestamp
       : new Date(Date.now() - 15 * 60 * 1000).toISOString();
 
-  // タイムスタンプ以降に更新されたページ一覧を取得（最大 limit 件まで）
+  // タイムスタンプ以降に更新されたページ一覧を取得
   const recentChangePages = await fetchRecentChanges(
     timestampISOString,
     "confluenceUpdateNotifyJob",

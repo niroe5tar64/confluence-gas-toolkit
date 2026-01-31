@@ -60,6 +60,21 @@ export namespace Confluence {
   }
 
   /**
+   * Confluence ページの履歴情報
+   */
+  export interface History {
+    /** 作成日時（ISO 8601 形式） */
+    createdDate?: Date;
+    /** 作成者情報 */
+    createdBy?: {
+      /** 作成者の表示名 */
+      displayName?: string;
+      [key: string]: unknown;
+    };
+    [key: string]: unknown;
+  }
+
+  /**
    * Confluence 検索結果のオブジェクト
    *
    * Note: Confluence API のオンプレ版とクラウド版でレスポンス形式が異なる。
@@ -70,6 +85,8 @@ export namespace Confluence {
   export interface SearchResult extends Content {
     /** ページのバージョン情報 */
     version?: Version;
+    /** ページの履歴情報 */
+    history?: History;
     [key: string]: unknown;
   }
 
