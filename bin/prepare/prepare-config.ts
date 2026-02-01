@@ -8,7 +8,7 @@ import path from "node:path";
 const prepareConfig = async (): Promise<void> => {
   const prod = process.argv.some((arg) => arg === "--prod");
   const envSuffix = prod ? ".prod" : ".dev";
-  const configDir = path.resolve(import.meta.dir, "../src/config");
+  const configDir = path.resolve(import.meta.dir, "../../src/config");
 
   // 環境別設定ファイルのパターン
   const configFiles = ["confluence-page-configs", "slack-messages"];
@@ -18,9 +18,7 @@ const prepareConfig = async (): Promise<void> => {
     const destFile = path.join(configDir, `${configName}.ts`);
 
     if (!fs.existsSync(sourceFile)) {
-      console.warn(
-        `Warning: ${configName}${envSuffix}.ts not found, skipping`,
-      );
+      console.warn(`Warning: ${configName}${envSuffix}.ts not found, skipping`);
       continue;
     }
 

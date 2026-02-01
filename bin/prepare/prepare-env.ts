@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import path from "node:path";
 
 /**
  * Prepare a .env file for the current target environment.
@@ -7,13 +8,16 @@ import fs from "node:fs";
 const prepareEnv = async (): Promise<void> => {
   const prod = process.argv.some((arg) => arg === "--prod");
   const envFile = prod ? ".env.prod" : ".env.dev";
+  const projectRoot = path.resolve(import.meta.dir, "../../");
+  const sourceFile = path.join(projectRoot, envFile);
+  const destFile = path.join(projectRoot, ".env");
 
-  if (!fs.existsSync(`./${envFile}`)) {
+  if (!fs.existsSync(sourceFile)) {
     console.warn(`Warning: ${envFile} not found, skipping .env preparation`);
     return;
   }
 
-  fs.copyFileSync(`./${envFile}`, "./.env");
+  fs.copyFileSync(sourceFile, destFile);
   console.log(`Prepared .env from ${envFile}`);
 };
 

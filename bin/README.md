@@ -15,8 +15,10 @@ bin/
 ├── deploy.ts                      # デプロイスクリプト
 ├── open.ts                        # ブラウザで開くスクリプト
 ├── push.ts                        # プッシュスクリプト
-├── prepare-clasp-json.ts          # clasp設定準備
-├── prepare-env.ts                 # 環境変数ファイル準備
+├── prepare/
+│   ├── prepare-clasp-json.ts      # clasp設定準備
+│   ├── prepare-config.ts          # 環境別設定ファイル準備
+│   └── prepare-env.ts             # 環境変数ファイル準備
 ├── init/
 │   └── index.ts                   # プロジェクト初期化
 └── template/
@@ -129,9 +131,10 @@ bun run deploy:prod  # 本番環境
 #### 処理フロー
 
 1. `prepareClaspJson()` で適切な `.clasp.json` を準備
-2. `prepareEnv()` で `.env` を環境に応じて準備
-3. `bun run build` でビルド
-4. `bunx clasp deploy` でデプロイ
+2. `prepareConfig()` で環境別設定ファイルを準備
+3. `prepareEnv()` で `.env` を環境に応じて準備
+4. `bun run build` でビルド
+5. `bunx clasp deploy` でデプロイ
 
 ---
 
@@ -147,9 +150,7 @@ bun run open:prod  # 本番環境
 #### 処理フロー
 
 1. `prepareClaspJson()` で適切な `.clasp.json` を準備
-2. `prepareEnv()` で `.env` を環境に応じて準備
-3. `bun run build` でビルド
-4. `bunx clasp open` でブラウザを開く
+2. `bunx clasp open` でブラウザを開く
 
 ---
 
@@ -165,13 +166,14 @@ bun run push:prod  # 本番環境
 #### 処理フロー
 
 1. `prepareClaspJson()` で適切な `.clasp.json` を準備
-2. `prepareEnv()` で `.env` を環境に応じて準備
-3. `bun run build` でビルド
-4. `bunx clasp push` でプッシュ
+2. `prepareConfig()` で環境別設定ファイルを準備
+3. `prepareEnv()` で `.env` を環境に応じて準備
+4. `bun run build` でビルド
+5. `bunx clasp push` でプッシュ
 
 ---
 
-### prepare-clasp-json.ts
+### prepare/prepare-clasp-json.ts
 
 **clasp設定ファイルの準備**
 
@@ -183,6 +185,36 @@ bun run push:prod  # 本番環境
 | `--prod` | `.clasp-prod.json` | `.clasp.json` |
 
 これにより、開発環境と本番環境で異なるGASプロジェクトを使い分けられる。
+
+---
+
+### prepare/prepare-config.ts
+
+**環境別設定ファイルの準備**
+
+コマンドライン引数に `--prod` があるかどうかで、使用する設定ファイルを切り替える。
+
+| フラグ | コピー元 | コピー先 |
+|--------|----------|----------|
+| なし | `src/config/*.dev.ts` | `src/config/*.ts` |
+| `--prod` | `src/config/*.prod.ts` | `src/config/*.ts` |
+
+対象ファイル:
+- `confluence-page-configs`
+- `slack-messages`
+
+---
+
+### prepare/prepare-env.ts
+
+**環境変数ファイルの準備**
+
+コマンドライン引数に `--prod` があるかどうかで、使用する `.env` ファイルを切り替える。
+
+| フラグ | コピー元 | コピー先 |
+|--------|----------|----------|
+| なし | `.env.dev` | `.env` |
+| `--prod` | `.env.prod` | `.env` |
 
 ---
 
@@ -265,17 +297,22 @@ bun run init
         │                     │                     │
         └─────────────────────┼─────────────────────┘
                               │
-                ┌─────────────┴───────────────┐
-                │                             │
-                ▼                             ▼
-┌───────────────────────────────────┐ ┌──────────────────────┐
-│  prepare-clasp-json.ts            │ │ prepare-env.ts       │
-│                                   │ │                      │
-│ .clasp-dev.json  ─┐               │ │ .env.dev  ─┐         │
-│ .clasp-prod.json ─┴──► .clasp.json│ │ .env.prod ─┴──► .env │
-└───────────────────────────────────┘ └──────────────────────┘
-                │                             │
-                └─────────────┬───────────────┘
+                              ▼
+              ┌───────────────────────────────────┐
+              │           prepare/                │
+              ├───────────────────────────────────┤
+              │ prepare-clasp-json.ts             │
+              │   .clasp-dev.json ─┬► .clasp.json │
+              │   .clasp-prod.json─┘              │
+              ├───────────────────────────────────┤
+              │ prepare-config.ts                 │
+              │   *.dev.ts ─┬► *.ts               │
+              │   *.prod.ts─┘  (src/config/)      │
+              ├───────────────────────────────────┤
+              │ prepare-env.ts                    │
+              │   .env.dev ─┬► .env               │
+              │   .env.prod─┘                     │
+              └───────────────────────────────────┘
                               │
                               ▼
                     ┌─────────────────┐

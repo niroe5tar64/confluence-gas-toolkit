@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { prepareEnv } from "../prepare-env";
+import { prepareEnv } from "../prepare/prepare-env";
 
 describe("prepareEnv", () => {
   const baseArgv = [...process.argv];
