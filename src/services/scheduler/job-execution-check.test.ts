@@ -160,7 +160,7 @@ describe("isJobExecutionAllowed", () => {
       const spy = spyOn(globalThis, "Date" as unknown as "Date").mockImplementation(((
         ...args: ConstructorParameters<DateConstructor>
       ) =>
-        args.length === 0
+        args[0] === undefined
           ? new OriginalDate(mockDate)
           : new OriginalDate(...args)) as unknown as DateConstructor);
 
@@ -175,7 +175,7 @@ describe("isJobExecutionAllowed", () => {
       const spy = spyOn(globalThis, "Date" as unknown as "Date").mockImplementation(((
         ...args: ConstructorParameters<DateConstructor>
       ) =>
-        args.length === 0
+        args[0] === undefined
           ? new OriginalDate(mockDate)
           : new OriginalDate(...args)) as unknown as DateConstructor);
 
@@ -190,7 +190,7 @@ describe("isJobExecutionAllowed", () => {
       const spy = spyOn(globalThis, "Date" as unknown as "Date").mockImplementation(((
         ...args: ConstructorParameters<DateConstructor>
       ) =>
-        args.length === 0
+        args[0] === undefined
           ? new OriginalDate(mockDate)
           : new OriginalDate(...args)) as unknown as DateConstructor);
 
@@ -207,7 +207,7 @@ describe("isJobExecutionAllowed", () => {
       const spy = spyOn(globalThis, "Date" as unknown as "Date").mockImplementation(((
         ...args: ConstructorParameters<DateConstructor>
       ) =>
-        args.length
+        args[0] === undefined
           ? new OriginalDate(mockDate)
           : new OriginalDate(...args)) as unknown as DateConstructor);
 
@@ -222,7 +222,7 @@ describe("isJobExecutionAllowed", () => {
       const spy = spyOn(globalThis, "Date" as unknown as "Date").mockImplementation(((
         ...args: ConstructorParameters<DateConstructor>
       ) =>
-        args.length
+        args[0] === undefined
           ? new OriginalDate(mockDate)
           : new OriginalDate(...args)) as unknown as DateConstructor);
 
