@@ -24,7 +24,7 @@ export default class HttpClient {
     url: string,
     options: RequestInit = {},
   ): Promise<Response | GoogleAppsScript.URL_Fetch.HTTPResponse> {
-    if (process.env.TARGET !== "GAS") {
+    if (typeof process !== "undefined" && process.env.TARGET !== "GAS") {
       // ローカル (Node.js / Bun)
       return fetch(url, options);
     }
@@ -43,8 +43,7 @@ export default class HttpClient {
         gasOptions.contentType = "text/plain";
       } else if (options.body instanceof Blob) {
         gasOptions.payload = options.body;
-        gasOptions.contentType =
-          (options.body.type || "application/octet-stream");
+        gasOptions.contentType = options.body.type || "application/octet-stream";
       } else {
         gasOptions.payload = JSON.stringify(options.body);
         gasOptions.contentType = "application/json";

@@ -142,7 +142,7 @@ if (typeof process !== "undefined" && process.env.TARGET !== "GAS") {
 
 ```typescript
 // clients/http-client.ts
-if (process.env.TARGET !== "GAS") {
+if (typeof process !== "undefined" && process.env.TARGET !== "GAS") {
   // ローカル: fetch API を使用
   return fetch(url, options);
 }
