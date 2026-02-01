@@ -3,7 +3,45 @@ import path from "node:path";
 import { ensureDirSync } from "fs-extra";
 import { build as buildUsingVite } from "vite";
 
+const loadDotEnv = (envPath: string) => {
+  if (!fs.existsSync(envPath)) {
+    return;
+  }
+  const content = fs.readFileSync(envPath, "utf-8");
+  for (const rawLine of content.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) {
+      continue;
+    }
+    const eqIndex = line.indexOf("=");
+    if (eqIndex <= 0) {
+      continue;
+    }
+    const key = line.slice(0, eqIndex).trim();
+    let value = line.slice(eqIndex + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    process.env[key] = value;
+  }
+};
+
+const resolveEnvPath = () => {
+  const cwd = process.cwd();
+  const directEnv = path.resolve(cwd, ".env");
+  if (fs.existsSync(directEnv)) {
+    return directEnv;
+  }
+  const isProd = process.argv.includes("--prod");
+  const preferred = path.resolve(cwd, isProd ? ".env.prod" : ".env.dev");
+  return preferred;
+};
+
 const build = async (filename: string, name: string) => {
+  loadDotEnv(resolveEnvPath());
   const res = await buildUsingVite({
     root: process.cwd(),
     build: {
