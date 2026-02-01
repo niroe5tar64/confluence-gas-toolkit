@@ -6,7 +6,7 @@
   "type": "module",
   "module": "index.ts",
   "devDependencies": {
-    "@biomejs/biome": "^1.5.2",
+    "@biomejs/biome": "^2.3.13",
     "@google/clasp": "^2.4.2",
     "@topcli/prompts": "^1.8.0",
     "@types/bun": "^1.0.4",
@@ -27,6 +27,6 @@
     "push": "bun run ./bin/push.ts",
     "push:prod": "bun run ./bin/push.ts --prod",
     "open": "bunx clasp open",
-    "open:prod": "bunx clasp open --prod"
+    "open:prod": "bun run open"
   }
 }
