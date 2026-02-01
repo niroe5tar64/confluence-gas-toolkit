@@ -23,8 +23,10 @@
     | `MINIFY` | ビルド時のminify設定 (`true`/`false`) |
     | `CONFLUENCE_PAT` | Confluence Personal Access Token |
     | `CONFLUENCE_URL` | ConfluenceのベースURL |
-    | `CONFLUENCE_PAGE_CONFIGS` | ジョブごとのページ設定（JSON形式） |
     | `SLACK_WEBHOOK_URLS` | ジョブごとのWebhook URL設定（JSON形式） |
+
+    ページ設定は `src/config/confluence-page-configs.sample.ts` をコピーして
+    `src/config/confluence-page-configs.ts` を作成してください。
 
 1. Bun のインストール ([URL](https://bun.sh/docs/installation))
 

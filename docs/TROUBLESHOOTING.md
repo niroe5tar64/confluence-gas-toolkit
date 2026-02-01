@@ -75,7 +75,7 @@
 **解決策**:
 - 監視対象のページ数を減らす
 - 実行頻度を上げて 1 回あたりの処理量を減らす
-- `CONFLUENCE_PAGE_CONFIGS` の `rootPageIds` で監視範囲を絞る
+- `src/config/confluence-page-configs.ts` の `rootPageIds` で監視範囲を絞る
 
 ### メモリ不足
 
@@ -212,8 +212,8 @@ A: 以下を確認してください：
 ### Q: 特定のページだけ通知されない
 
 A: 以下を確認してください：
-- そのページが `CONFLUENCE_PAGE_CONFIGS` の `rootPageIds` 配下にあるか
-- そのページが `CONFLUENCE_PAGE_CONFIGS` の `spaceKey` に属しているか
+- そのページが `src/config/confluence-page-configs.ts` の `rootPageIds` 配下にあるか
+- そのページが `src/config/confluence-page-configs.ts` の `spaceKey` に属しているか
 - ページの更新日時がタイムスタンプより新しいか
 
 ### Q: 通知メッセージをカスタマイズしたい

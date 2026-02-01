@@ -34,7 +34,6 @@ GAS 環境では Script Properties で環境変数を設定します。
 |--------|------|------|
 | `CONFLUENCE_PAT` | Yes | Confluence Personal Access Token |
 | `CONFLUENCE_URL` | Yes | Confluence のベース URL（例: `https://confluence.example.com`） |
-| `CONFLUENCE_PAGE_CONFIGS` | Yes | ジョブごとのページ設定（JSON形式） |
 
 #### CONFLUENCE_PAT の取得方法
 
@@ -46,9 +45,9 @@ GAS 環境では Script Properties で環境変数を設定します。
 
 > **注意**: トークンは作成時にのみ表示されます。必ず安全な場所に保存してください。
 
-#### CONFLUENCE_PAGE_CONFIGS の作り方
+#### ページ設定の作り方
 
-以下の形式で、ジョブごとに `spaceKey` と `rootPageIds` を設定します。
+`src/config/confluence-page-configs.ts` に、ジョブごとに `spaceKey` と `rootPageIds` を設定します。
 
 ```json
 {
@@ -59,6 +58,10 @@ GAS 環境では Script Properties で環境変数を設定します。
 ```
 
 `spaceKey` はスペースの URL（`/display/SPACEKEY/...`）やスペース設定画面から確認できます。`rootPageIds` はページ URL の `pageId` で確認できます。
+
+#### 設定ファイルの作成
+
+`src/config/confluence-page-configs.sample.ts` をコピーして `src/config/confluence-page-configs.ts` を作成してください。
 
 ### Slack 設定
 

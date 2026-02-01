@@ -1,16 +1,8 @@
-import type { Confluence } from "~/types";
-import type { JobName } from "~/types";
+import { CONFLUENCE_PAGE_CONFIGS, type PageConfig } from "~/config";
+import type { Confluence, JobName } from "~/types";
 import { getEnvVariable, toQueryString } from "~/utils";
 
 import HttpClient from "./http-client";
-
-/**
- * ページ設定の型定義
- */
-interface PageConfig {
-  rootPageIds: string[];
-  spaceKey: string;
-}
 
 // ページ設定のキャッシュ
 let cachedPageConfigs: Record<JobName, PageConfig> | null = null;
@@ -57,21 +49,16 @@ function getPageConfigs(): Record<JobName, PageConfig> {
     return cachedPageConfigs;
   }
 
-  const raw = getEnvVariable("CONFLUENCE_PAGE_CONFIGS");
-  if (!raw) {
-    throw new Error("必須環境変数が未設定です: CONFLUENCE_PAGE_CONFIGS");
+  if (!CONFLUENCE_PAGE_CONFIGS) {
+    throw new Error("CONFLUENCE_PAGE_CONFIGS が未設定です");
   }
 
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    if (!isPageConfigRecord(parsed)) {
-      throw new Error("CONFLUENCE_PAGE_CONFIGS の形式が不正です");
-    }
-    cachedPageConfigs = parsed;
-    return cachedPageConfigs;
-  } catch {
+  if (!isPageConfigRecord(CONFLUENCE_PAGE_CONFIGS)) {
     throw new Error("CONFLUENCE_PAGE_CONFIGS の形式が不正です");
   }
+
+  cachedPageConfigs = CONFLUENCE_PAGE_CONFIGS;
+  return cachedPageConfigs;
 }
 
 /**

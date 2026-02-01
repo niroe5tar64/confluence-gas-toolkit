@@ -133,7 +133,6 @@ GAS 環境では環境変数の代わりに Script Properties を使用します
 |-------------|-----|
 | `CONFLUENCE_PAT` | Confluence Personal Access Token |
 | `CONFLUENCE_URL` | Confluence のベース URL |
-| `CONFLUENCE_PAGE_CONFIGS` | ジョブごとのページ設定（JSON形式） |
 | `SLACK_WEBHOOK_URLS` | ジョブごとの Webhook URL（JSON形式） |
 
 > **注記**: `SLACK_WEBHOOK_URLS` は JSON 形式で以下のように設定します：

@@ -187,3 +187,5 @@ data
 !.codex/skills/**
 .codex/skills/.system/
 
+# Local config overrides
+src/config/confluence-page-configs.ts
