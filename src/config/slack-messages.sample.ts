@@ -1,10 +1,9 @@
 import type { JobName } from "~/types";
 
 /**
- * ジョブごとのSlackメッセージ設定
+ * ジョブごとのSlackメッセージ設定（サンプル）
  *
- * 各ジョブに対して、Slackメッセージのヘッダーテキストなどを設定します。
- * JobNameに新しいジョブを追加した場合、ここに設定しないとコンパイルエラーになります。
+ * `src/config/slack-messages.ts` を作成する際の雛形として使用します。
  */
 export const SLACK_MESSAGES: Record<JobName, { headerText: string }> = {
   confluenceUpdateNotifyJob: {

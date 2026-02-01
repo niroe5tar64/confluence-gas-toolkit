@@ -189,3 +189,4 @@ data
 
 # Local config overrides
 src/config/confluence-page-configs.ts
+src/config/slack-messages.ts
