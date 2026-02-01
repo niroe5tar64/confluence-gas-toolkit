@@ -125,7 +125,7 @@ export default class HttpClient {
       // オブジェクトの場合、各プロパティを再帰的に処理
       const convertedObj: Record<string, unknown> = {};
       for (const key in input) {
-        if (Object.prototype.hasOwnProperty.call(input, key)) {
+        if (Object.hasOwn(input, key)) {
           convertedObj[key] = this.deepTransform((input as Record<string, unknown>)[key]);
         }
       }
