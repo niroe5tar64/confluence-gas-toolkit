@@ -21,9 +21,9 @@ src/services/       → ビジネスロジック
   └─ io/            → ジョブ状態の永続化
 src/config/         → 設定ファイル
   ├─ job-schedule.ts → ジョブ実行スケジュール設定
-  ├─ confluence-page-configs.ts → 監視対象ページ設定
+  ├─ confluence-page-configs.ts → 監視対象ページ設定（*.dev.ts/*.prod.ts から生成）
   ├─ slack-routes.ts → Slack Webhook ルーティング
-  └─ slack-messages.ts → Slack メッセージ文言
+  └─ slack-messages.ts → Slack メッセージ文言（*.dev.ts/*.prod.ts から生成）
 src/clients/        → APIクライアント（レジストリパターン）
   ├─ http-client.ts → デュアル環境対応基底クラス
   ├─ confluence-client.ts

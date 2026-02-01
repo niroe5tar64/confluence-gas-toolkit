@@ -3,7 +3,9 @@ import type { JobName } from "~/types";
 /**
  * ジョブごとのSlackメッセージ設定（サンプル）
  *
- * `src/config/slack-messages.ts` を作成する際の雛形として使用します。
+ * 環境別ファイルを作成する際の雛形として使用します:
+ * - 開発環境: `slack-messages.dev.ts`
+ * - 本番環境: `slack-messages.prod.ts`
  */
 export const SLACK_MESSAGES: Record<JobName, { headerText: string }> = {
   confluenceUpdateNotifyJob: {

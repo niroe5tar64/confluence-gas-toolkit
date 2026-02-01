@@ -185,6 +185,10 @@ data
 !.codex/skills/**
 .codex/skills/.system/
 
-# Local config overrides
+# Local config overrides (generated and environment-specific)
 src/config/confluence-page-configs.ts
+src/config/confluence-page-configs.dev.ts
+src/config/confluence-page-configs.prod.ts
 src/config/slack-messages.ts
+src/config/slack-messages.dev.ts
+src/config/slack-messages.prod.ts

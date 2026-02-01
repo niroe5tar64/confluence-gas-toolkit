@@ -10,6 +10,8 @@ bun test             # テスト実行
 bun run build        # GAS用ビルド
 bun run push         # 開発環境へプッシュ
 bun run push:prod    # 本番環境へプッシュ
+bun run deploy       # 開発環境へバージョン付きデプロイ
+bun run deploy:prod  # 本番環境へバージョン付きデプロイ
 bunx biome check .   # Lint
 ```
 

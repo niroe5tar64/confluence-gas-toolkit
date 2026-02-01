@@ -55,8 +55,10 @@ bun run push
 ```
 
 このコマンドは以下を実行します：
-1. TypeScript を GAS 用の JavaScript にビルド
-2. `.clasp-dev.json` の設定を使用して GAS にプッシュ
+1. `.clasp-dev.json` → `.clasp.json` にコピー
+2. 環境別設定ファイル（`*.dev.ts`）を準備
+3. TypeScript を GAS 用の JavaScript にビルド
+4. GAS にプッシュ
 
 ### 本番環境へのデプロイ
 
@@ -65,7 +67,24 @@ bun run push
 bun run push:prod
 ```
 
-このコマンドは `.clasp-prod.json` の設定を使用します。
+このコマンドは `.clasp-prod.json` と環境別設定ファイル（`*.prod.ts`）を使用します。
+
+### バージョン付きデプロイ
+
+```bash
+# 開発環境
+bun run deploy
+
+# 本番環境
+bun run deploy:prod
+```
+
+`deploy` コマンドは `push` と同様の準備処理を行った後、`clasp deploy` でバージョン付きデプロイを作成します。
+本番リリース時など、特定バージョンを固定したい場合に使用します。
+
+> **push vs deploy の違い**
+> - `push`: HEAD に直接プッシュ（開発中の反復作業向け）
+> - `deploy`: バージョン付きデプロイを作成（本番リリース向け）
 
 ### ビルドのみ実行
 

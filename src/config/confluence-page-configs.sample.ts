@@ -6,21 +6,23 @@ export interface PageConfig {
 }
 
 /**
- *`confluence-page-configs.sample.ts` を参考に
- * この値を更新してください。
- */
-export let CONFLUENCE_PAGE_CONFIGS: Record<JobName, PageConfig> | null = null;
-
-/**
  * テスト用: ページ設定を上書き
  * @internal
  */
-export function setConfluencePageConfigsForTest(configs: Record<JobName, PageConfig> | null): void {
+export let CONFLUENCE_PAGE_CONFIGS: Record<JobName, PageConfig> | null = null;
+
+export function setConfluencePageConfigsForTest(
+  configs: Record<JobName, PageConfig> | null,
+): void {
   CONFLUENCE_PAGE_CONFIGS = configs;
 }
 
 /**
- * `src/config/confluence-page-configs.ts` を作成する際のサンプル。
+ * ジョブごとのConfluenceページ設定（サンプル）
+ *
+ * 環境別ファイルを作成する際の雛形として使用します:
+ * - 開発環境: `confluence-page-configs.dev.ts`
+ * - 本番環境: `confluence-page-configs.prod.ts`
  */
 CONFLUENCE_PAGE_CONFIGS = {
   confluenceUpdateNotifyJob: {

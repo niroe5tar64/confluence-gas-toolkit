@@ -61,7 +61,18 @@ GAS 環境では Script Properties で環境変数を設定します。
 
 #### 設定ファイルの作成
 
-`src/config/confluence-page-configs.sample.ts` をコピーして `src/config/confluence-page-configs.ts` を作成してください。
+環境別の設定ファイルを作成します。
+
+```bash
+# 開発環境用
+cp src/config/confluence-page-configs.sample.ts src/config/confluence-page-configs.dev.ts
+
+# 本番環境用
+cp src/config/confluence-page-configs.sample.ts src/config/confluence-page-configs.prod.ts
+```
+
+各ファイルを編集して、環境ごとの値を設定してください。
+`bun run push` / `bun run push:prod` 実行時に、適切なファイルが自動的に使用されます。
 
 ### Slack 設定
 
@@ -87,7 +98,15 @@ GAS 環境では Script Properties で環境変数を設定します。
 ```
 
 通知ヘッダーテキストは `src/config/slack-messages.ts` でジョブごとに設定します。
-`src/config/slack-messages.sample.ts` をコピーして作成してください（Git には含めません）。
+環境別の設定ファイルを作成してください（Git には含めません）。
+
+```bash
+# 開発環境用
+cp src/config/slack-messages.sample.ts src/config/slack-messages.dev.ts
+
+# 本番環境用
+cp src/config/slack-messages.sample.ts src/config/slack-messages.prod.ts
+```
 
 ## スケジュール設定
 
