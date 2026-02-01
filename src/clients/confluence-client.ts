@@ -51,8 +51,6 @@ function isPageConfigRecord(value: unknown): value is Record<JobName, PageConfig
 
 /**
  * ページ設定をパースして返す
- * 後方互換性を保つため、CONFLUENCE_PAGE_CONFIGSが未設定の場合は
- * 既存の環境変数（ROOT_PAGE_ID, SPACE_KEY）から生成
  */
 function getPageConfigs(): Record<JobName, PageConfig> {
   if (cachedPageConfigs) {
@@ -60,36 +58,20 @@ function getPageConfigs(): Record<JobName, PageConfig> {
   }
 
   const raw = getEnvVariable("CONFLUENCE_PAGE_CONFIGS");
-  if (raw) {
-    try {
-      const parsed: unknown = JSON.parse(raw);
-      if (isPageConfigRecord(parsed)) {
-        cachedPageConfigs = parsed;
-        return cachedPageConfigs;
-      }
-      // 型検証失敗時は後方互換性で処理
-      console.warn("CONFLUENCE_PAGE_CONFIGS の形式が不正です。後方互換モードで処理します。");
-    } catch {
-      // JSON パース失敗時は後方互換性で処理
-      console.warn("CONFLUENCE_PAGE_CONFIGS のパースに失敗しました。後方互換モードで処理します。");
-    }
+  if (!raw) {
+    throw new Error("必須環境変数が未設定です: CONFLUENCE_PAGE_CONFIGS");
   }
 
-  // 後方互換性：既存環境変数から生成（単一ページ）
-  const rootPageId = getEnvVariable("ROOT_PAGE_ID");
-  const spaceKey = getEnvVariable("SPACE_KEY");
-  const defaultConfig: PageConfig = {
-    rootPageIds: rootPageId ? [rootPageId] : [],
-    spaceKey: spaceKey ?? "",
-  };
-
-  cachedPageConfigs = {
-    confluenceUpdateNotifyJob: defaultConfig,
-    confluenceUpdateSummaryJob: defaultConfig,
-    confluenceCreateNotifyJob: defaultConfig,
-  };
-
-  return cachedPageConfigs;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!isPageConfigRecord(parsed)) {
+      throw new Error("CONFLUENCE_PAGE_CONFIGS の形式が不正です");
+    }
+    cachedPageConfigs = parsed;
+    return cachedPageConfigs;
+  } catch {
+    throw new Error("CONFLUENCE_PAGE_CONFIGS の形式が不正です");
+  }
 }
 
 /**
@@ -109,15 +91,6 @@ export function getConfluenceClient(jobName: JobName): ConfluenceClient {
   const configs = getPageConfigs();
   const config = configs[jobName];
   if (!config?.rootPageIds?.length || !config?.spaceKey) {
-    const missingConfig = [];
-    const rawConfigs = getEnvVariable("CONFLUENCE_PAGE_CONFIGS");
-    if (!rawConfigs) {
-      if (!getEnvVariable("ROOT_PAGE_ID")) missingConfig.push("ROOT_PAGE_ID");
-      if (!getEnvVariable("SPACE_KEY")) missingConfig.push("SPACE_KEY");
-    }
-    if (missingConfig.length > 0) {
-      throw new Error(`必須環境変数が未設定です: ${missingConfig.join(", ")}`);
-    }
     throw new Error(`ジョブ ${jobName} の設定が見つかりません`);
   }
 

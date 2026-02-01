@@ -23,12 +23,8 @@
     | `MINIFY` | ビルド時のminify設定 (`true`/`false`) |
     | `CONFLUENCE_PAT` | Confluence Personal Access Token |
     | `CONFLUENCE_URL` | ConfluenceのベースURL |
-    | `SPACE_KEY` | 監視対象のスペースキー（後方互換用） |
-    | `ROOT_PAGE_ID` | 監視対象の親ページのID（後方互換用） |
-    | `CONFLUENCE_PAGE_CONFIGS` | ジョブごとのページ設定（JSON形式、オプション） |
-    | `SLACK_HEADER_TEXT` | Slack通知のヘッダーテキスト |
-    | `SLACK_WEBHOOK_URL` | Slack WebhookのURL（後方互換用） |
-    | `SLACK_WEBHOOK_URLS` | ジョブごとのWebhook URL設定（JSON形式、オプション） |
+    | `CONFLUENCE_PAGE_CONFIGS` | ジョブごとのページ設定（JSON形式） |
+    | `SLACK_WEBHOOK_URLS` | ジョブごとのWebhook URL設定（JSON形式） |
 
 1. Bun のインストール ([URL](https://bun.sh/docs/installation))
 

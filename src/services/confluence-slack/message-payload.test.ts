@@ -7,10 +7,6 @@ mock.module("~/utils", () => ({
     if (!date) return "2024/01/15 12:00";
     return "2024/01/15 09:00";
   },
-  getEnvVariable: (key: string) => {
-    if (key === "SLACK_HEADER_TEXT") return "テスト通知";
-    return undefined;
-  },
   toQueryString: (params: Record<string, string>) =>
     Object.entries(params)
       .map(([k, v]) => `${k}=${v}`)
@@ -44,7 +40,7 @@ describe("convertSearchResultToMessagePayload", () => {
       // ヘッダーブロックの確認
       const headerBlock = result.blocks?.[0] as { type: string; text: { text: string } };
       expect(headerBlock.type).toBe("header");
-      expect(headerBlock.text.text).toBe("テスト通知");
+      expect(headerBlock.text.text).toBe("Confluenceページ更新通知");
 
       // セクションブロックの確認
       const sectionBlock = result.blocks?.[1] as { type: string; fields: { text: string }[] };

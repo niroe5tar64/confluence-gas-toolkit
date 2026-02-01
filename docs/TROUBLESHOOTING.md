@@ -24,7 +24,7 @@
 **解決策**:
 1. Slack App の設定を確認
 2. 新しい Webhook URL を発行
-3. 環境変数 `SLACK_WEBHOOK_URL` を更新
+3. 環境変数 `SLACK_WEBHOOK_URLS` を更新
 
 ## 接続エラー
 
@@ -75,7 +75,7 @@
 **解決策**:
 - 監視対象のページ数を減らす
 - 実行頻度を上げて 1 回あたりの処理量を減らす
-- `ROOT_PAGE_ID` で監視範囲を絞る
+- `CONFLUENCE_PAGE_CONFIGS` の `rootPageIds` で監視範囲を絞る
 
 ### メモリ不足
 
@@ -212,8 +212,8 @@ A: 以下を確認してください：
 ### Q: 特定のページだけ通知されない
 
 A: 以下を確認してください：
-- そのページが `ROOT_PAGE_ID` の配下にあるか
-- そのページが `SPACE_KEY` のスペースに属しているか
+- そのページが `CONFLUENCE_PAGE_CONFIGS` の `rootPageIds` 配下にあるか
+- そのページが `CONFLUENCE_PAGE_CONFIGS` の `spaceKey` に属しているか
 - ページの更新日時がタイムスタンプより新しいか
 
 ### Q: 通知メッセージをカスタマイズしたい

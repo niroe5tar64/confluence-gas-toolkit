@@ -133,11 +133,8 @@ GAS 環境では環境変数の代わりに Script Properties を使用します
 |-------------|-----|
 | `CONFLUENCE_PAT` | Confluence Personal Access Token |
 | `CONFLUENCE_URL` | Confluence のベース URL |
-| `SPACE_KEY` | 監視対象のスペースキー |
-| `ROOT_PAGE_ID` | 監視対象の親ページ ID |
+| `CONFLUENCE_PAGE_CONFIGS` | ジョブごとのページ設定（JSON形式） |
 | `SLACK_WEBHOOK_URLS` | ジョブごとの Webhook URL（JSON形式） |
-| `SLACK_WEBHOOK_URL` | 旧形式の Webhook URL（後方互換用、オプション） |
-| `SLACK_HEADER_TEXT` | 通知ヘッダーテキスト |
 
 > **注記**: `SLACK_WEBHOOK_URLS` は JSON 形式で以下のように設定します：
 > ```json

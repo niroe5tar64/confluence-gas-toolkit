@@ -58,22 +58,12 @@ describe("getSlackClient", () => {
     });
   });
 
-  describe("後方互換性: SLACK_WEBHOOK_URL へのフォールバック", () => {
-    it("SLACK_WEBHOOK_URLS が未設定で SLACK_WEBHOOK_URL がある場合、DEFAULT キーとして扱う", () => {
-      getEnvVariableSpy.mockImplementation((key: string) => {
-        if (key === "SLACK_WEBHOOK_URL") return "https://hooks.slack.com/services/LEGACY";
-        return "";
-      });
-
-      const client = getSlackClient("DEFAULT");
-      expect(client).toBeDefined();
-    });
-
-    it("両方の環境変数が未設定の場合はエラーをスロー", () => {
+  describe("エラーハンドリング", () => {
+    it("SLACK_WEBHOOK_URLS が未設定の場合はエラーをスロー", () => {
       getEnvVariableSpy.mockReturnValue("");
 
       expect(() => getSlackClient("any-key")).toThrow(
-        "必須環境変数が未設定です: SLACK_WEBHOOK_URLS, SLACK_WEBHOOK_URL",
+        "必須環境変数が未設定です: SLACK_WEBHOOK_URLS",
       );
     });
   });

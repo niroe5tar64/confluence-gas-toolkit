@@ -1,6 +1,6 @@
 import { SLACK_MESSAGES } from "~/config";
 import type { Confluence, JobName, Slack } from "~/types";
-import { formatDateJST, getEnvVariable, toQueryString } from "~/utils";
+import { formatDateJST, toQueryString } from "~/utils";
 
 /**
  * Confluence の検索結果を元に Slack メッセージのペイロードを生成する関数。
@@ -29,8 +29,7 @@ export function convertSearchResultToMessagePayload(
         })
       : undefined;
 
-  // 後方互換性: 環境変数が設定されている場合はそちらを優先
-  const headerText = getEnvVariable("SLACK_HEADER_TEXT") ?? SLACK_MESSAGES[jobName].headerText;
+  const headerText = SLACK_MESSAGES[jobName].headerText;
 
   return createSlackMessagePayload({
     messageTitle: headerText,

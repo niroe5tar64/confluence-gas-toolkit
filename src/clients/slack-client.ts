@@ -32,18 +32,11 @@ function initializeWebhookUrls(): Record<string, string> {
     return parsed;
   }
 
-  // 後方互換: 旧環境変数を DEFAULT として扱う
-  const legacyUrl = getEnvVariable("SLACK_WEBHOOK_URL");
-  if (legacyUrl) {
-    return { DEFAULT: legacyUrl };
-  }
-
-  throw new Error("必須環境変数が未設定です: SLACK_WEBHOOK_URLS, SLACK_WEBHOOK_URL");
+  throw new Error("必須環境変数が未設定です: SLACK_WEBHOOK_URLS");
 }
 
 /**
  * 環境変数から Webhook URL マッピングを取得
- * 後方互換: SLACK_WEBHOOK_URLS が未設定の場合は SLACK_WEBHOOK_URL を DEFAULT として扱う
  */
 function getWebhookUrls(): Record<string, string> {
   if (!cachedWebhookUrls) {

@@ -34,8 +34,7 @@ GAS 環境では Script Properties で環境変数を設定します。
 |--------|------|------|
 | `CONFLUENCE_PAT` | Yes | Confluence Personal Access Token |
 | `CONFLUENCE_URL` | Yes | Confluence のベース URL（例: `https://confluence.example.com`） |
-| `SPACE_KEY` | Yes | 監視対象のスペースキー |
-| `ROOT_PAGE_ID` | Yes | 監視対象の親ページ ID |
+| `CONFLUENCE_PAGE_CONFIGS` | Yes | ジョブごとのページ設定（JSON形式） |
 
 #### CONFLUENCE_PAT の取得方法
 
@@ -47,22 +46,25 @@ GAS 環境では Script Properties で環境変数を設定します。
 
 > **注意**: トークンは作成時にのみ表示されます。必ず安全な場所に保存してください。
 
-#### SPACE_KEY の確認方法
+#### CONFLUENCE_PAGE_CONFIGS の作り方
 
-- スペースの URL から確認: `https://confluence.example.com/display/SPACEKEY/...`
-- スペースの設定画面から確認
+以下の形式で、ジョブごとに `spaceKey` と `rootPageIds` を設定します。
 
-#### ROOT_PAGE_ID の確認方法
+```json
+{
+  "confluenceUpdateNotifyJob": { "rootPageIds": ["12345"], "spaceKey": "SPACE_A" },
+  "confluenceUpdateSummaryJob": { "rootPageIds": ["23456"], "spaceKey": "SPACE_B" },
+  "confluenceCreateNotifyJob": { "rootPageIds": ["34567"], "spaceKey": "SPACE_C" }
+}
+```
 
-- ページ URL から確認: `https://confluence.example.com/pages/viewpage.action?pageId=12345`
-- ページの「ページ情報」から確認
+`spaceKey` はスペースの URL（`/display/SPACEKEY/...`）やスペース設定画面から確認できます。`rootPageIds` はページ URL の `pageId` で確認できます。
 
 ### Slack 設定
 
 | 変数名 | 必須 | 説明 |
 |--------|------|------|
-| `SLACK_WEBHOOK_URL` | Yes | Slack Incoming Webhook の URL |
-| `SLACK_HEADER_TEXT` | Yes | 通知メッセージのヘッダーテキスト |
+| `SLACK_WEBHOOK_URLS` | Yes | ジョブごとの Webhook URL（JSON形式） |
 
 #### Slack Webhook の設定方法
 
@@ -70,6 +72,18 @@ GAS 環境では Script Properties で環境変数を設定します。
 2. 「Incoming Webhooks」を検索してインストール
 3. 通知先のチャンネルを選択
 4. 生成された Webhook URL をコピー
+
+`SLACK_WEBHOOK_URLS` は以下の形式で設定します。
+
+```json
+{
+  "update-notify": "https://hooks.slack.com/services/AAA",
+  "update-summary": "https://hooks.slack.com/services/BBB",
+  "create-notify": "https://hooks.slack.com/services/CCC"
+}
+```
+
+通知ヘッダーテキストは `src/config/slack-messages.ts` でジョブごとに設定します。
 
 ## スケジュール設定
 
