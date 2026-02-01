@@ -130,8 +130,10 @@ confluence-gas-toolkit は、Confluence Server/Data Center のページ更新を
 `process.env.TARGET` の値で環境を判定します。ビルド時に esbuild が `"GAS"` または `undefined` を埋め込みます。
 
 ```typescript
+import { isLocalEnvironment } from "~/utils/env";
+
 // ローカル環境かどうかを判定
-if (typeof process !== "undefined" && process.env.TARGET !== "GAS") {
+if (isLocalEnvironment()) {
   // ローカル環境 (Bun/Node.js)
 } else {
   // GAS 環境
@@ -142,7 +144,7 @@ if (typeof process !== "undefined" && process.env.TARGET !== "GAS") {
 
 ```typescript
 // clients/http-client.ts
-if (typeof process !== "undefined" && process.env.TARGET !== "GAS") {
+if (isLocalEnvironment()) {
   // ローカル: fetch API を使用
   return fetch(url, options);
 }
@@ -154,7 +156,7 @@ return UrlFetchApp.fetch(url, gasOptions);
 
 ```typescript
 // utils/env.ts
-if (typeof process !== "undefined" && process.env.TARGET !== "GAS") {
+if (isLocalEnvironment()) {
   // ローカル: process.env を使用
   return process.env[key] || null;
 }

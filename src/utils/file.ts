@@ -1,3 +1,5 @@
+import { isLocalEnvironment } from "./env";
+
 /**
  * 指定されたファイルに複数行の内容を書き込む。
  *
@@ -18,7 +20,7 @@
  * ```
  */
 export function writeFile(filePath: string, content: string): void {
-  if (typeof process !== "undefined" && process.env.TARGET !== "GAS") {
+  if (isLocalEnvironment()) {
     // ローカル環境 (Node.js/Bun)
     const fs = require("node:fs");
     const path = require("node:path");
@@ -71,7 +73,7 @@ export function writeFile(filePath: string, content: string): void {
  */
 export function readFile(filePath: string): object {
   let content = "";
-  if (typeof process !== "undefined" && process.env.TARGET !== "GAS") {
+  if (isLocalEnvironment()) {
     // ローカル環境 (Node.js/Bun)
     const fs = require("node:fs");
     if (!fs.existsSync(filePath)) {

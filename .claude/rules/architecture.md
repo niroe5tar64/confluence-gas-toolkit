@@ -43,8 +43,10 @@ tsconfig.json & vite.config.ts で設定済み：
 
 ### 環境判定
 ```typescript
+import { isLocalEnvironment } from "~/utils/env";
+
 // ローカル環境かどうかを判定（process.env.TARGET が "GAS" でなければローカル）
-if (typeof process !== "undefined" && process.env.TARGET !== "GAS") {
+if (isLocalEnvironment()) {
   // ローカル環境
 }
 ```

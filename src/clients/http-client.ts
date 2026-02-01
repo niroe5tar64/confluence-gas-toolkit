@@ -1,3 +1,5 @@
+import { isLocalEnvironment } from "../utils/env";
+
 /**
  * HTTP クライアントクラス
  *
@@ -24,7 +26,7 @@ export default class HttpClient {
     url: string,
     options: RequestInit = {},
   ): Promise<Response | GoogleAppsScript.URL_Fetch.HTTPResponse> {
-    if (typeof process !== "undefined" && process.env.TARGET !== "GAS") {
+    if (isLocalEnvironment()) {
       // ローカル (Node.js / Bun)
       return fetch(url, options);
     }
