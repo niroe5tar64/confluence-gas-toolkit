@@ -1,6 +1,5 @@
-import { JobExecutableCondition, JobName } from "~/types";
-
-import { jobExecutionPolicy } from "./job-schedule-config";
+import { jobExecutionPolicy } from "~/config";
+import type { JobExecutableCondition, JobName } from "~/types";
 
 /**
  * 指定されたジョブが現在の日時に実行可能かどうかを判定する関数。

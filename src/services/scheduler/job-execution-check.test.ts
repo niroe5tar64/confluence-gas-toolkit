@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, spyOn } from "bun:test";
+import { describe, expect, it, spyOn } from "bun:test";
 import type { JobExecutableCondition } from "~/types";
 import { isJobExecutionAllowed, isJobExecutionTime } from "./job-execution-check";
 
@@ -200,15 +200,42 @@ describe("isJobExecutionAllowed", () => {
     });
   });
 
+  describe("ポリシーが定義されているジョブ (confluenceCreateNotifyJob)", () => {
+    it("should return true for confluenceCreateNotifyJob during allowed time", () => {
+      // 月曜日 12:00（平日営業時間内）をモック
+      const mockDate = new Date("2024-01-15T12:00:00");
+      const spy = spyOn(globalThis, "Date" as unknown as "Date").mockImplementation(((
+        ...args: ConstructorParameters<DateConstructor>
+      ) =>
+        args.length
+          ? new OriginalDate(mockDate)
+          : new OriginalDate(...args)) as unknown as DateConstructor);
+
+      expect(isJobExecutionAllowed("confluenceCreateNotifyJob")).toBe(true);
+
+      spy.mockRestore();
+    });
+
+    it("should return false for confluenceCreateNotifyJob outside allowed time", () => {
+      // 土曜日 12:00（週末）をモック
+      const mockDate = new Date("2024-01-20T12:00:00");
+      const spy = spyOn(globalThis, "Date" as unknown as "Date").mockImplementation(((
+        ...args: ConstructorParameters<DateConstructor>
+      ) =>
+        args.length
+          ? new OriginalDate(mockDate)
+          : new OriginalDate(...args)) as unknown as DateConstructor);
+
+      expect(isJobExecutionAllowed("confluenceCreateNotifyJob")).toBe(false);
+
+      spy.mockRestore();
+    });
+  });
+
   describe("ポリシーが未定義のジョブ", () => {
     it("should return true for confluenceUpdateSummaryJob (no policy defined)", () => {
       // ポリシー未定義のジョブは常に実行可能
       expect(isJobExecutionAllowed("confluenceUpdateSummaryJob")).toBe(true);
-    });
-
-    it("should return true for confluenceCreateNotifyJob (no policy defined)", () => {
-      // ポリシー未定義のジョブは常に実行可能
-      expect(isJobExecutionAllowed("confluenceCreateNotifyJob")).toBe(true);
     });
   });
 });
