@@ -4,40 +4,49 @@
 
 フォーマットは [Keep a Changelog](https://keepachangelog.com/ja/1.0.0/) に基づいています。
 
-## [Unreleased]
+## [0.1.0] - 2026-02-02
 
 ### Added
-- CONTRIBUTING.md: コントリビューションガイドを追加
-- docs/CONFIGURATION.md: 設定ガイドを追加
-- docs/DEPLOYMENT.md: デプロイガイドを追加
-- docs/ARCHITECTURE.md: アーキテクチャガイドを追加
-- docs/TROUBLESHOOTING.md: トラブルシューティングガイドを追加
 - `confluenceCreateNotifyJob`: ページ新規作成通知機能を実装
   - 新規作成ページ（version.number === 1）の検出
   - Slack への個別通知
-
-### Changed
-- 型安全性とnull安全性を改善
-- import文をアルファベット順に整理
-- Slack複数チャンネル対応（SLACK_WEBHOOK_URLS への移行）
+- Slack複数チャンネル対応
   - ジョブごとに異なる送信先チャンネルを指定可能
   - レジストリパターンによる複数SlackClient管理
+- ジョブごとに異なるROOT_PAGE_IDを指定可能（ConfluenceClientレジストリパターン）
+- 環境別設定ファイル（`*.dev.ts` / `*.prod.ts`）のビルド時切り替え
+- 環境ごとの `.env` 準備スクリプト（`bun run prepare:env`）
+- 主要なユーティリティ・サービスの単体テストを追加
+- ドキュメント追加
+  - CONTRIBUTING.md, ARCHITECTURE.md, CONFIGURATION.md
+  - DEPLOYMENT.md, TROUBLESHOOTING.md
+- DevContainer環境の設定追加
+
+### Changed
+- 設定管理の整理
+  - 秘匿情報ではない設定を環境変数から設定ファイルに移動
+  - `CONFLUENCE_PAGE_CONFIGS` を設定ファイル管理に統一
+- 型定義の改善
+  - Confluence・Slack型定義を最小化し外部パッケージ依存を削除
+  - 型安全性とnull安全性を改善
+- 環境判定ロジックを `isLocalEnvironment()` に共通化
+- import文をアルファベット順に整理
 
 ### Removed
-- `ConfluenceClient.getInstance()`: 廃止API を削除（getConfluenceClient(jobName) を使用）
-- `SlackClient.getInstance()`: 廃止API を削除（getSlackClient(targetKey) を使用）
+- `ConfluenceClient.getInstance()`: 廃止（`getConfluenceClient(jobName)` を使用）
+- `SlackClient.getInstance()`: 廃止（`getSlackClient(targetKey)` を使用）
+- 後方互換の環境変数フォールバックを廃止
 
 ### Fixed
 - `POLING_INFO_DIR` の typo を `POLLING_INFO_DIR` に修正
 - clasp準備スクリプトの引数 `---prod` を `--prod` に修正
 - タイムスタンプ無効判定を修正（`Number.isNaN(date.getTime())` に統一）
 - `confluenceUpdateSummaryJob` の await 忘れを修正
-- サマリーペイロードの diff URL パラメータを修正（currentVersion → revisedVersion）
-- `rootPageIds` 空配列チェックを追加
-- 環境変数バリデーションを強化
-- 型定義の重複（RichTextElement）を解消
+- サマリーペイロードの diff URL パラメータを修正
+- Slack 通知の Content-Type エラーを修正
+- HttpClient で process オブジェクトの存在チェックを追加（GAS互換性）
 
-## [0.0.1] - 初期リリース
+## [0.0.1] - 2025-04-20
 
 ### Added
 - Confluence ページ更新の Slack 通知機能

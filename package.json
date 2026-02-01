@@ -1,6 +1,6 @@
 {
   "name": "confluence-gas-toolkit",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Toolkit for Google Apps Script",
   "author": "futakuchi-eitaro",
   "type": "module",
