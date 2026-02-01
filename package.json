@@ -26,7 +26,7 @@
     "deploy:prod": "bun run ./bin/deploy.ts --prod",
     "push": "bun run ./bin/push.ts",
     "push:prod": "bun run ./bin/push.ts --prod",
-    "open": "bunx clasp open",
-    "open:prod": "bun run open"
+    "open": "bun run ./bin/open.ts",
+    "open:prod": "bun run ./bin/open.ts --prod"
   }
 }

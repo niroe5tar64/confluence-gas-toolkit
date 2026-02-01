@@ -16,6 +16,7 @@ bin/
 ├── open.ts                        # ブラウザで開くスクリプト
 ├── push.ts                        # プッシュスクリプト
 ├── prepare-clasp-json.ts          # clasp設定準備
+├── prepare-env.ts                 # 環境変数ファイル準備
 ├── init/
 │   └── index.ts                   # プロジェクト初期化
 └── template/
@@ -128,8 +129,9 @@ bun run deploy:prod  # 本番環境
 #### 処理フロー
 
 1. `prepareClaspJson()` で適切な `.clasp.json` を準備
-2. `bun run build` でビルド
-3. `bunx clasp deploy` でデプロイ
+2. `prepareEnv()` で `.env` を環境に応じて準備
+3. `bun run build` でビルド
+4. `bunx clasp deploy` でデプロイ
 
 ---
 
@@ -145,8 +147,9 @@ bun run open:prod  # 本番環境
 #### 処理フロー
 
 1. `prepareClaspJson()` で適切な `.clasp.json` を準備
-2. `bun run build` でビルド
-3. `bunx clasp open` でブラウザを開く
+2. `prepareEnv()` で `.env` を環境に応じて準備
+3. `bun run build` でビルド
+4. `bunx clasp open` でブラウザを開く
 
 ---
 
@@ -162,8 +165,9 @@ bun run push:prod  # 本番環境
 #### 処理フロー
 
 1. `prepareClaspJson()` で適切な `.clasp.json` を準備
-2. `bun run build` でビルド
-3. `bunx clasp push` でプッシュ
+2. `prepareEnv()` で `.env` を環境に応じて準備
+3. `bun run build` でビルド
+4. `bunx clasp push` でプッシュ
 
 ---
 
@@ -247,7 +251,7 @@ bun run init
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                         bun run xxx                          │
+│                         bun run xxx                         │
 └─────────────────────────────────────────────────────────────┘
                               │
         ┌─────────────────────┼─────────────────────┐
@@ -261,15 +265,17 @@ bun run init
         │                     │                     │
         └─────────────────────┼─────────────────────┘
                               │
-                              ▼
-                 ┌─────────────────────────┐
-                 │  prepare-clasp-json.ts  │
-                 │                         │
-                 │ .clasp-dev.json  ─┐     │
-                 │ .clasp-prod.json ─┼──►  │
-                 │                   │     │
-                 │              .clasp.json│
-                 └─────────────────────────┘
+                ┌─────────────┴───────────────┐
+                │                             │
+                ▼                             ▼
+┌───────────────────────────────────┐ ┌──────────────────────┐
+│  prepare-clasp-json.ts            │ │ prepare-env.ts       │
+│                                   │ │                      │
+│ .clasp-dev.json  ─┐               │ │ .env.dev  ─┐         │
+│ .clasp-prod.json ─┴──► .clasp.json│ │ .env.prod ─┴──► .env │
+└───────────────────────────────────┘ └──────────────────────┘
+                │                             │
+                └─────────────┬───────────────┘
                               │
                               ▼
                     ┌─────────────────┐
