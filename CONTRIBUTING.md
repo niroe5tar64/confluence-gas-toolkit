@@ -208,6 +208,7 @@ describe("targetFunction", () => {
 src/
 ├── index.ts              # GAS エントリーポイント（export のみ）
 ├── clients/              # API クライアント（外部通信）
+├── config/               # 設定ファイル（スケジュール、ページ設定など）
 ├── services/             # ビジネスロジック
 ├── types/                # 型定義
 ├── use-case/             # ジョブのオーケストレーション

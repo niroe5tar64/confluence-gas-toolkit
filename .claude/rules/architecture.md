@@ -10,12 +10,20 @@ paths:
 ```
 src/index.ts        → GASエントリーポイント（exportのみ）
 src/use-case/       → ジョブオーケストレーション
+  ├─ confluence-update-notify-job.ts → 更新個別通知
+  ├─ confluence-update-summary-job.ts → 更新サマリー通知
+  └─ confluence-create-notify-job.ts → 新規作成通知
 src/services/       → ビジネスロジック
   ├─ confluence/    → Confluence API連携 & ページネーション
   ├─ slack/         → メッセージ送信
   ├─ confluence-slack/ → ペイロード変換（Confluence→Slack）
-  ├─ scheduler/     → 時間ベースの実行ルール
+  ├─ scheduler/     → 実行可否判定ロジック
   └─ io/            → ジョブ状態の永続化
+src/config/         → 設定ファイル
+  ├─ job-schedule.ts → ジョブ実行スケジュール設定
+  ├─ confluence-page-configs.ts → 監視対象ページ設定
+  ├─ slack-routes.ts → Slack Webhook ルーティング
+  └─ slack-messages.ts → Slack メッセージ文言
 src/clients/        → APIクライアント（レジストリパターン）
   ├─ http-client.ts → デュアル環境対応基底クラス
   ├─ confluence-client.ts
@@ -35,21 +43,22 @@ tsconfig.json & vite.config.ts で設定済み：
 
 ### 環境判定
 ```typescript
-const isGAS = typeof process === "undefined" || process.env.TARGET === "gas";
+// ローカル環境かどうかを判定（process.env.TARGET が "GAS" でなければローカル）
+if (typeof process !== "undefined" && process.env.TARGET !== "GAS") {
+  // ローカル環境
+}
 ```
 
 ### 切り替えポイント
 - `HttpClient`: GASでは`UrlFetchApp.fetch()`、ローカルでは`fetch()`
 - `getEnvVariable()`: GASでは`PropertiesService`、ローカルでは`process.env`
-- 状態永続化: GASでは`PropertiesService`、ローカルでは`data/*.json`
+- 状態永続化: GASではGoogle Drive、ローカルでは`data/*.json`
 
-## データフロー（更新通知ジョブ）
+## データフロー
 
-1. スケジュールチェック → 時間外なら終了
-2. 前回タイムスタンプ読み込み
-3. Confluence APIで更新ページ取得（ページネーション対応）
-4. Slackメッセージに変換して送信
-5. 最新タイムスタンプを保存
+- 更新個別通知: スケジュール判定 → 変更ページ取得 → Slack送信 → タイムスタンプ更新
+- 新規作成通知: スケジュール判定 → 変更ページから新規作成のみ抽出 → Slack送信 → タイムスタンプ更新
+- 更新サマリー通知: 初回は全ページの版数を初期化 → 変更分をまとめてSlack送信 → 版数とタイムスタンプを保存
 
 ## 拡張時の注意
 

@@ -4,7 +4,9 @@
 
 ## 🛠 主な機能
 
-- 更新ページのSlack通知
+- Confluence ページ更新の個別通知
+- Confluence ページ更新のサマリー通知（週次など定期実行向け）
+- Confluence ページ新規作成の個別通知
 
 ## 💻 セットアップ方法（Getting Started）
 
@@ -27,6 +29,9 @@
 
     ページ設定は `src/config/confluence-page-configs.sample.ts` をコピーして
     `src/config/confluence-page-configs.ts` を作成してください。
+
+    通知ヘッダー文言は `src/config/slack-messages.sample.ts` をコピーして
+    `src/config/slack-messages.ts` を作成し、必要に応じて編集します。
 
 1. Bun のインストール ([URL](https://bun.sh/docs/installation))
 
@@ -131,13 +136,21 @@ src/
 │   ├── http-client.ts    # デュアル環境対応 HTTP クライアント
 │   ├── confluence-client.ts
 │   └── slack-client.ts
+├── config/               # 設定ファイル
+│   ├── job-schedule.ts   # ジョブ実行スケジュール
+│   ├── confluence-page-configs.ts  # 監視対象ページ
+│   ├── slack-routes.ts   # Slack Webhook ルーティング
+│   └── slack-messages.ts # Slack メッセージ文言
 ├── services/             # ビジネスロジック
 │   ├── confluence/       # Confluence API 連携
 │   ├── slack/            # Slack メッセージ送信
 │   ├── confluence-slack/ # Confluence → Slack ペイロード変換
-│   ├── scheduler/        # 実行スケジュール管理
+│   ├── scheduler/        # 実行可否判定ロジック
 │   └── io/               # ジョブ状態の永続化
 ├── types/                # TypeScript 型定義
 ├── use-case/             # ジョブオーケストレーション
+│   ├── confluence-update-notify-job.ts   # 更新個別通知
+│   ├── confluence-update-summary-job.ts  # 更新サマリー通知
+│   └── confluence-create-notify-job.ts   # 新規作成通知
 └── utils/                # ユーティリティ
 ```

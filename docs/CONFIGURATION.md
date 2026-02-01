@@ -87,10 +87,11 @@ GAS 環境では Script Properties で環境変数を設定します。
 ```
 
 通知ヘッダーテキストは `src/config/slack-messages.ts` でジョブごとに設定します。
+`src/config/slack-messages.sample.ts` をコピーして作成してください（Git には含めません）。
 
 ## スケジュール設定
 
-ジョブの実行スケジュールは `src/services/scheduler/job-schedule-config.ts` で設定します。
+ジョブの実行スケジュールは `src/config/job-schedule.ts` で設定します。
 
 ### 設定例
 
@@ -102,6 +103,17 @@ export const jobExecutionPolicy: Record<string, JobExecutionRule> = {
     executableConditions: [
       {
         allowedDays: [1, 2, 3, 4, 5],  // 月〜金
+        startHour: 8,
+        endHour: 19,
+      },
+    ],
+  },
+  confluenceCreateNotifyJob: {
+    name: "Confluence登録通知JOBの設定",
+    description: "平日 8:00 ~ 19:00",
+    executableConditions: [
+      {
+        allowedDays: [1, 2, 3, 4, 5], // 月〜金
         startHour: 8,
         endHour: 19,
       },

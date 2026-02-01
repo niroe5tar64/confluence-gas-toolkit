@@ -75,7 +75,7 @@
 **解決策**:
 - 監視対象のページ数を減らす
 - 実行頻度を上げて 1 回あたりの処理量を減らす
-- `src/config/confluence-page-configs.ts` の `rootPageIds` で監視範囲を絞る
+- `src/config/confluence-page-configs.ts` で監視範囲を絞る
 
 ### メモリ不足
 
@@ -99,7 +99,7 @@
 
 **確認方法**:
 1. GAS の実行ログを確認
-2. `job-schedule-config.ts` の設定を確認
+2. `src/config/job-schedule.ts` の設定を確認
 3. Confluence で実際に更新があるか確認
 
 ### 重複通知が発生する

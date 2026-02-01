@@ -1,6 +1,10 @@
 # アーキテクチャガイド
 
-このドキュメントでは、confluence-gas-toolkit の設計思想とアーキテクチャについて説明します。
+このドキュメントでは、confluence-gas-toolkit の設計思想とアーキテクチャについて説明します。現在は以下の 3 つのジョブを提供します。
+
+- ページ更新の個別通知 (`confluenceUpdateNotifyJob`)
+- ページ更新のサマリー通知 (`confluenceUpdateSummaryJob`)
+- ページ新規作成の個別通知 (`confluenceCreateNotifyJob`)
 
 ## 概要
 
@@ -11,13 +15,13 @@ confluence-gas-toolkit は、Confluence Server/Data Center のページ更新を
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    src/index.ts                         │
-│                 (GAS エントリーポイント)                  │
+│                   (GAS Entry Point)                     │
 └─────────────────────────────────────────────────────────┘
                            │
                            ▼
 ┌─────────────────────────────────────────────────────────┐
 │                    src/use-case/                        │
-│                 (ジョブオーケストレーション)               │
+│                  (Job Orchestration)                    │
 │  ┌─────────────────────┐  ┌─────────────────────┐       │
 │  │ confluence-update-  │  │ confluence-update-  │       │
 │  │ notify-job.ts       │  │ summary-job.ts      │       │
@@ -27,28 +31,27 @@ confluence-gas-toolkit は、Confluence Server/Data Center のページ更新を
                            ▼
 ┌─────────────────────────────────────────────────────────┐
 │                    src/services/                        │
-│                   (ビジネスロジック)                      │
+│                  (Business Logic)                       │
 │  ┌───────────┐ ┌───────────┐ ┌───────────────────┐      │
 │  │confluence/│ │  slack/   │ │confluence-slack/  │      │
 │  └───────────┘ └───────────┘ └───────────────────┘      │
-│  ┌───────────┐ ┌───────────┐                            │
-│  │scheduler/ │ │    io/    │                            │
-│  └───────────┘ └───────────┘                            │
+│  ┌───────────┐ ┌───────────┐ ┌───────────────────┐      │
+│  │scheduler/ │ │    io/    │ │     config/       │      │
+│  └───────────┘ └───────────┘ └───────────────────┘      │
 └─────────────────────────────────────────────────────────┘
                            │
                            ▼
 ┌─────────────────────────────────────────────────────────┐
 │                    src/clients/                         │
-│                   (API クライアント)                      │
+│                   (API Clients)                         │
 │  ┌───────────────┐ ┌─────────────────┐ ┌─────────────┐  │
 │  │ http-client   │ │confluence-client│ │slack-client │  │
 │  └───────────────┘ └─────────────────┘ └─────────────┘  │
 └─────────────────────────────────────────────────────────┘
-                           │
-                           ▼
+
 ┌─────────────────────────────────────────────────────────┐
 │              src/types/ & src/utils/                    │
-│              (型定義 & ユーティリティ)                    │
+│                (Types & Utilities)                      │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -70,6 +73,7 @@ confluence-gas-toolkit は、Confluence Server/Data Center のページ更新を
 |---------|------|
 | `confluence-update-notify-job.ts` | ページ更新を個別に Slack 通知 |
 | `confluence-update-summary-job.ts` | ページ更新をサマリー形式で通知 |
+| `confluence-create-notify-job.ts` | ページ新規作成を個別に Slack 通知 |
 
 ### サービス (`src/services/`)
 
@@ -81,8 +85,17 @@ confluence-gas-toolkit は、Confluence Server/Data Center のページ更新を
 | `confluence/` | Confluence API との連携、ページネーション処理 |
 | `slack/` | Slack メッセージの送信 |
 | `confluence-slack/` | Confluence データから Slack ペイロードへの変換 |
-| `scheduler/` | 実行スケジュールの判定 |
+| `scheduler/` | 実行可否の判定ロジック |
 | `io/` | ジョブ状態（タイムスタンプ等）の永続化 |
+
+### 設定 (`src/config/`)
+
+| ファイル | 責務 |
+|---------|------|
+| `job-schedule.ts` | ジョブ実行スケジュールの定義 |
+| `confluence-page-configs.ts` | 監視対象ページの設定 |
+| `slack-routes.ts` | Slack Webhook のルーティング設定 |
+| `slack-messages.ts` | ジョブごとのメッセージヘッダー文言 |
 
 ### クライアント (`src/clients/`)
 
@@ -114,35 +127,39 @@ confluence-gas-toolkit は、Confluence Server/Data Center のページ更新を
 
 ### 環境の判定
 
+`process.env.TARGET` の値で環境を判定します。ビルド時に esbuild が `"GAS"` または `undefined` を埋め込みます。
+
 ```typescript
-// utils/env.ts
-const isGAS = typeof process === "undefined" || process.env.TARGET === "gas";
+// ローカル環境かどうかを判定
+if (typeof process !== "undefined" && process.env.TARGET !== "GAS") {
+  // ローカル環境 (Bun/Node.js)
+} else {
+  // GAS 環境
+}
 ```
 
 ### HTTP クライアントの切り替え
 
 ```typescript
 // clients/http-client.ts
-if (isGAS) {
-  // GAS: UrlFetchApp.fetch() を使用
-  UrlFetchApp.fetch(url, options);
-} else {
+if (process.env.TARGET !== "GAS") {
   // ローカル: fetch API を使用
-  fetch(url, options);
+  return fetch(url, options);
 }
+// GAS: UrlFetchApp.fetch() を使用
+return UrlFetchApp.fetch(url, gasOptions);
 ```
 
 ### 環境変数の取得
 
 ```typescript
 // utils/env.ts
-if (isGAS) {
-  // GAS: PropertiesService を使用
-  PropertiesService.getScriptProperties().getProperty(key);
-} else {
+if (typeof process !== "undefined" && process.env.TARGET !== "GAS") {
   // ローカル: process.env を使用
-  process.env[key];
+  return process.env[key] || null;
 }
+// GAS: PropertiesService を使用
+return PropertiesService.getScriptProperties().getProperty(key);
 ```
 
 ### 状態の永続化
@@ -152,31 +169,34 @@ if (isGAS) {
 | GAS | Google Drive に `data/*.json` を作成して永続化（Drive 権限が必要） |
 | ローカル | リポジトリ直下の `data/*.json` ファイル |
 
-> Note: 初期案では PropertiesService を想定していましたが、現在の実装は Drive ベースです。GAS へのデプロイ時は Drive API 権限付与（スクリプトの「Google Drive へのアクセス」）を忘れないでください。
+> **Note**: GAS へのデプロイ時は Drive API 権限付与（スクリプトの「Google Drive へのアクセス」）を忘れないでください。
 
 ## データフロー
 
-### 更新通知ジョブの流れ
+### ページ更新（個別通知）
 
-```
-1. ジョブ開始
-   │
-2. スケジュールチェック
-   │ → 実行時間外なら終了
-   │
-3. 前回実行時のタイムスタンプを読み込み
-   │
-4. Confluence API で更新ページを取得
-   │ → ページネーションで全件取得
-   │
-5. 各ページを Slack メッセージに変換
-   │
-6. Slack に送信
-   │
-7. 最新のタイムスタンプを保存
-   │
-8. ジョブ終了
-```
+1. スケジュールチェック（`job-schedule.ts`、対象: confluenceUpdateNotifyJob）
+2. 前回タイムスタンプを読み込み（`data/confluence-update-notify-job.json`）
+3. Confluence 変更ページを取得（ページネーション対応）
+4. ページごとに Slack ペイロードへ変換
+5. Slack へ送信（送信先は `slack-routes.ts`、ヘッダー文言は `slack-messages.ts`）
+6. 最新タイムスタンプを保存
+
+### ページ新規作成（個別通知）
+
+1. スケジュールチェック（対象: confluenceCreateNotifyJob）
+2. 前回タイムスタンプを読み込み（存在しない場合は 15 分前を既定値に）
+3. 変更ページから「新規作成」を抽出（`version.number === 1` または `history.createdDate`）
+4. 作成日時順にソートして Slack へ送信
+5. 最新更新日時を保存（`data/confluence-create-notify-job.json`）
+
+### ページ更新（サマリー通知）
+
+1. 初回実行時は全ページの版数を初期化して保存
+2. 以降は前回タイムスタンプ以降の変更ページを取得
+3. 変更箇所をまとめてサマリーペイロードを生成
+4. Slack へ送信
+5. 最新版の情報とタイムスタンプを保存（`data/confluence-summary-job.json`）
 
 ## 拡張ポイント
 
@@ -188,7 +208,7 @@ if (isGAS) {
 
 ### 新しいスケジュールルールの追加
 
-`src/services/scheduler/job-schedule-config.ts` を編集します。
+`src/config/job-schedule.ts` を編集します。
 
 ### 新しい Confluence 操作の追加
 
