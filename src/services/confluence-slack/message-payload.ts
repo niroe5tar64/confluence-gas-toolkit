@@ -1,4 +1,5 @@
-import { Confluence, Slack } from "~/types";
+import { SLACK_MESSAGES } from "~/config";
+import type { Confluence, JobName, Slack } from "~/types";
 import { formatDateJST, getEnvVariable, toQueryString } from "~/utils";
 
 /**
@@ -9,11 +10,13 @@ import { formatDateJST, getEnvVariable, toQueryString } from "~/utils";
  *
  * @param {Confluence.SearchResult} searchResult - Confluence の検索結果オブジェクト。
  * @param {string} baseUrl - Confluence のベース URL。
+ * @param {JobName} jobName - 呼び出し元のジョブ名。ヘッダーテキストの取得に使用。
  * @returns {Slack.MessagePayload} - Slack に送信可能なメッセージペイロード。
  */
 export function convertSearchResultToMessagePayload(
   searchResult: Confluence.SearchResult,
   baseUrl: string,
+  jobName: JobName,
 ): Slack.MessagePayload {
   const { id, title, version } = searchResult;
 
@@ -26,8 +29,11 @@ export function convertSearchResultToMessagePayload(
         })
       : undefined;
 
+  // 後方互換性: 環境変数が設定されている場合はそちらを優先
+  const headerText = getEnvVariable("SLACK_HEADER_TEXT") ?? SLACK_MESSAGES[jobName].headerText;
+
   return createSlackMessagePayload({
-    messageTitle: getEnvVariable("SLACK_HEADER_TEXT") ?? "Confluence-Slack通知",
+    messageTitle: headerText,
     pageTitle: title,
     pageUrl: `${baseUrl}/pages/viewpage.action?pageId=${id}`,
     diffUrl: diffQuery ? `${baseUrl}/pages/diffpagesbyversion.action?${diffQuery}` : undefined,

@@ -1,4 +1,5 @@
-import { Confluence, Slack } from "~/types";
+import { SLACK_MESSAGES } from "~/config";
+import type { Confluence, Slack } from "~/types";
 import { formatDateJST, toQueryString } from "~/utils";
 
 /**
@@ -20,7 +21,8 @@ export function convertSearchResultsToSummaryPayload(
   const updatedPages = searchResults.map((result) =>
     createUpdatedPage(result, originalVersions[result.id] ?? 1, baseUrl),
   );
-  return createSlackSummaryPayload({ title: "週次サマリー", updatedPages });
+  const headerText = SLACK_MESSAGES.confluenceUpdateSummaryJob.headerText;
+  return createSlackSummaryPayload({ title: headerText, updatedPages });
 }
 
 /** 以降はプライベートな定義群 */

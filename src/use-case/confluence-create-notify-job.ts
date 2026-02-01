@@ -56,7 +56,11 @@ async function executeMainProcess() {
   const sortedSearchResults = sortSearchResultsByUpdatedAtAsc(createdPages);
   const baseUrl = recentChangePages._links?.base || "";
   for (const result of sortedSearchResults) {
-    const payload = convertSearchResultToMessagePayload(result, baseUrl);
+    const payload = convertSearchResultToMessagePayload(
+      result,
+      baseUrl,
+      "confluenceCreateNotifyJob",
+    );
     await sendSlackMessage(payload, TARGET_KEY);
   }
 

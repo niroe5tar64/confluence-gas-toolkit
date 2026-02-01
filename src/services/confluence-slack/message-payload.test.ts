@@ -36,7 +36,7 @@ describe("convertSearchResultToMessagePayload", () => {
         },
       };
 
-      const result = convertSearchResultToMessagePayload(searchResult, baseUrl);
+      const result = convertSearchResultToMessagePayload(searchResult, baseUrl, "confluenceUpdateNotifyJob");
 
       expect(result.blocks).toBeDefined();
       expect(result.blocks).toHaveLength(2);
@@ -72,7 +72,7 @@ describe("convertSearchResultToMessagePayload", () => {
         },
       };
 
-      const result = convertSearchResultToMessagePayload(searchResult, baseUrl);
+      const result = convertSearchResultToMessagePayload(searchResult, baseUrl, "confluenceUpdateNotifyJob");
 
       const sectionBlock = result.blocks?.[1] as { type: string; fields: { text: string }[] };
       // バージョン1なので diff リンクは含まれない
@@ -90,7 +90,7 @@ describe("convertSearchResultToMessagePayload", () => {
         // version なし
       };
 
-      const result = convertSearchResultToMessagePayload(searchResult, baseUrl);
+      const result = convertSearchResultToMessagePayload(searchResult, baseUrl, "confluenceUpdateNotifyJob");
 
       const sectionBlock = result.blocks?.[1] as { type: string; fields: { text: string }[] };
       // 更新者と更新日時が「不明」
@@ -104,7 +104,7 @@ describe("convertSearchResultToMessagePayload", () => {
         type: "page",
       };
 
-      const result = convertSearchResultToMessagePayload(searchResult, baseUrl);
+      const result = convertSearchResultToMessagePayload(searchResult, baseUrl, "confluenceUpdateNotifyJob");
 
       const sectionBlock = result.blocks?.[1] as { type: string; fields: { text: string }[] };
       expect(sectionBlock.fields[0].text).not.toContain("diff");
@@ -124,7 +124,7 @@ describe("convertSearchResultToMessagePayload", () => {
         },
       };
 
-      const result = convertSearchResultToMessagePayload(searchResult, baseUrl);
+      const result = convertSearchResultToMessagePayload(searchResult, baseUrl, "confluenceUpdateNotifyJob");
 
       const sectionBlock = result.blocks?.[1] as { type: string; fields: { text: string }[] };
       expect(sectionBlock.fields[0].text).toContain(
@@ -144,7 +144,7 @@ describe("convertSearchResultToMessagePayload", () => {
         },
       };
 
-      const result = convertSearchResultToMessagePayload(searchResult, baseUrl);
+      const result = convertSearchResultToMessagePayload(searchResult, baseUrl, "confluenceUpdateNotifyJob");
 
       const sectionBlock = result.blocks?.[1] as { type: string; fields: { text: string }[] };
       // diff URL には originalVersion=9 と revisedVersion=10 が含まれる
@@ -166,7 +166,7 @@ describe("convertSearchResultToMessagePayload", () => {
         },
       };
 
-      const result = convertSearchResultToMessagePayload(searchResult, baseUrl);
+      const result = convertSearchResultToMessagePayload(searchResult, baseUrl, "confluenceUpdateNotifyJob");
 
       const sectionBlock = result.blocks?.[1] as { type: string; fields: { text: string }[] };
       expect(sectionBlock.fields[0].text).toContain("テスト<>&\"'ページ");

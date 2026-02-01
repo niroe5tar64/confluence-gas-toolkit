@@ -38,4 +38,29 @@ describe("convertSearchResultsToSummaryPayload", () => {
     expect(payloadText).toContain("revisedVersion=3");
     expect(payloadText).not.toContain("currentVersion=");
   });
+
+  it("should use headerText from SLACK_MESSAGES", () => {
+    const searchResults: Confluence.SearchResult[] = [
+      {
+        id: "123",
+        title: "テストページ",
+        type: "page",
+        version: {
+          by: { displayName: "テストユーザー" },
+          when: new Date("2024-01-15T00:00:00Z"),
+          number: 3,
+        },
+      },
+    ];
+
+    const payload = convertSearchResultsToSummaryPayload(
+      searchResults,
+      { "123": 1 },
+      "https://example.atlassian.net/wiki",
+    );
+    const payloadText = JSON.stringify(payload);
+
+    // SLACK_MESSAGES.confluenceUpdateSummaryJob.headerText の値が含まれていることを確認
+    expect(payloadText).toContain("週次サマリー");
+  });
 });
