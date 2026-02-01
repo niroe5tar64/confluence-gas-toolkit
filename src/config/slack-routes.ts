@@ -1,10 +1,10 @@
-import type { JobName } from "~/types";
+import type { ClientKey, JobName } from "~/types";
 
 /**
  * ジョブ名 → Slack送信先キーのマッピング
  * JobName に新しいジョブを追加した場合、ここに設定しないとコンパイルエラーになる
  */
-export const SLACK_ROUTE: Record<JobName, string> = {
+export const SLACK_ROUTE: Record<JobName, ClientKey> = {
   confluenceUpdateNotifyJob: "update-notify",
   confluenceUpdateSummaryJob: "update-summary",
   confluenceCreateNotifyJob: "create-notify",

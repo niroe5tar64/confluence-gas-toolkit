@@ -20,6 +20,8 @@ export type JobDataFileName =
   | "confluence-summary-job.json"
   | "confluence-create-notify-job.json";
 
+export type ClientKey = "update-notify" | "update-summary" | "create-notify";
+
 export type JobData = JobDataForUpdateJob | JobDataForSummaryJob;
 export interface JobDataBase {
   timestamp: string;

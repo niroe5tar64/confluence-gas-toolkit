@@ -14,9 +14,10 @@ describe("SLACK_ROUTE", () => {
     expect(SLACK_ROUTE.confluenceCreateNotifyJob).toBe("create-notify");
   });
 
-  it("すべての値が文字列である", () => {
+  it("すべての値がClientKeyの有効な値である", () => {
+    const validClientKeys = ["update-notify", "update-summary", "create-notify"];
     for (const value of Object.values(SLACK_ROUTE)) {
-      expect(typeof value).toBe("string");
+      expect(validClientKeys).toContain(value);
     }
   });
 });
