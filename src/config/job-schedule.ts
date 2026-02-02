@@ -1,4 +1,4 @@
-import { JobExecutionRule } from "~/types";
+import type { JobExecutionRule } from "~/types";
 
 /**
  * ジョブの実行ポリシーを定義するオブジェクト。
