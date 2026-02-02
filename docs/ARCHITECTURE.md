@@ -120,6 +120,26 @@ confluence-gas-toolkit は、Confluence Server/Data Center のページ更新を
 - 環境変数の取得
 - 日付フォーマット
 - ファイル操作
+- ロギング
+
+#### ロギング機能 (`logger.ts`)
+
+統一されたログ出力機能を提供します。
+
+```typescript
+import { createLogger } from "~/utils/logger";
+
+const logger = createLogger("MyService");
+logger.debug("デバッグ情報", { key: "value" });
+logger.info("処理開始");
+logger.warn("警告メッセージ");
+logger.error("エラー発生", error, { context: "追加情報" });
+```
+
+- **ログレベル制御**: 環境変数 `LOG_LEVEL` で出力レベルを制御
+- **コンテキスト**: 各ロガーにコンテキスト名を付与して追跡を容易に
+- **構造化データ**: オプショナルなJSONデータを出力可能
+- **エラーサポート**: `error()` メソッドはスタックトレースも自動出力
 
 ## デュアル環境対応
 
