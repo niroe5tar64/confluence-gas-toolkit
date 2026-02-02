@@ -9,5 +9,5 @@ const appEnv = isProd ? "prod" : "dev";
 await prepareClaspJson();
 await prepareConfig();
 await prepareEnv();
-await $`APP_ENV=${appEnv} bun run build ${isProd ? "-- --prod" : ""}`;
+await $`APP_ENV=${appEnv} bun run build`;
 await $`bunx clasp push`;
