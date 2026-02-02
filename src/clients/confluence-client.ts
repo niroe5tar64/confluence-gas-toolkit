@@ -1,6 +1,6 @@
 import { CONFLUENCE_PAGE_CONFIGS, type PageConfig, validatePageConfigs } from "~/config";
 import type { Confluence, JobName } from "~/types";
-import { getEnvVariable, toQueryString } from "~/utils";
+import { createLogger, getEnvVariable, toQueryString } from "~/utils";
 
 import HttpClient from "./http-client";
 
@@ -89,7 +89,8 @@ export default class ConfluenceClient extends HttpClient {
   private token: string;
   private spaceKey: string;
   private rootPageId: string;
-  private rootPageIds: string[];
+  public readonly rootPageIds: string[];
+  private logger = createLogger("ConfluenceClient");
 
   /**
    * Confluence クライアントのインスタンスを作成する。
@@ -113,6 +114,12 @@ export default class ConfluenceClient extends HttpClient {
     this.spaceKey = spaceKey;
     this.rootPageId = rootPageId;
     this.rootPageIds = rootPageIds || [rootPageId];
+
+    this.logger.debug("ConfluenceClient初期化", {
+      spaceKey: this.spaceKey,
+      rootPageIds: this.rootPageIds,
+      rootPageCount: this.rootPageIds.length,
+    });
   }
 
   /**
@@ -147,6 +154,8 @@ export default class ConfluenceClient extends HttpClient {
     endpoint: string,
     requestBody?: string | Record<string, string | number | boolean> | Blob,
   ): Promise<T> {
+    this.logger.debug("リクエスト送信", { method, endpoint });
+
     const headers: Record<string, string> = {
       Authorization: `Bearer ${this.token}`,
       Accept: "application/json",
@@ -160,9 +169,18 @@ export default class ConfluenceClient extends HttpClient {
 
     const options: RequestInit = { method, headers, body };
 
+    let status: number | undefined;
+
     try {
       const response = await this.httpRequest(`${this.baseUrl}${endpoint}`, options);
       const json = await this.responseToJson(response);
+
+      if ("status" in response) {
+        status = response.status;
+      }
+      if ("getResponseCode" in response) {
+        status = response.getResponseCode();
+      }
 
       // ローカル環境 (Node.js / Bun)
       if ("status" in response && response.status >= 400) {
@@ -173,13 +191,21 @@ export default class ConfluenceClient extends HttpClient {
         throw new Error(`HTTP Error: ${response.getResponseCode()}`);
       }
 
-      return this.deepTransform(json) as T;
+      const transformed = this.deepTransform(json) as T;
+
+      this.logger.debug("レスポンス受信", {
+        method,
+        endpoint,
+        status,
+      });
+
+      return transformed;
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Fetch failed:", error.message);
-      } else {
-        console.error("Unexpected error:", error);
-      }
+      this.logger.error("API呼び出し失敗", error instanceof Error ? error : undefined, {
+        method,
+        endpoint,
+        status: status ?? "unknown",
+      });
       throw error;
     }
   }
@@ -222,7 +248,9 @@ export default class ConfluenceClient extends HttpClient {
     option?: Confluence.SearchRequestOption;
   }): Promise<Confluence.SearchPage> {
     if (this.rootPageIds.length === 0) {
-      console.warn("rootPageIds が空のため、処理をスキップします");
+      this.logger.warn("rootPageIdsが空のため処理スキップ", {
+        spaceKey: this.spaceKey,
+      });
       return { _links: {}, results: [], start: 0, limit: 0, size: 0 };
     }
 

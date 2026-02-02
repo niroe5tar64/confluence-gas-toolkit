@@ -1,5 +1,6 @@
 import { getSlackClient } from "~/clients";
-import { Slack } from "~/types";
+import type { Slack } from "~/types";
+import { createLogger } from "~/utils";
 
 /**
  * Slack にメッセージを送信するサービス関数。
@@ -57,13 +58,33 @@ export async function sendSlackMessage(payload: Slack.MessagePayload, targetKey 
  * }
  * ```
  */
-export async function sendSlackException(error: Error, targetKey = "DEFAULT") {
+export async function sendSlackException(
+  error: Error,
+  targetKey = "DEFAULT",
+  context?: { jobName?: string; stage?: string },
+) {
+  const logger = createLogger("SlackException");
+  logger.error("例外発生", error, context);
+
   const client = getSlackClient(targetKey);
+
+  const stackLines = error.stack?.split("\n").slice(0, 5).join("\n") ?? "";
   const payload = {
     blocks: [
       {
+        type: "header",
+        text: { type: "plain_text", text: "エラー発生" },
+      },
+      {
         type: "section",
-        fields: [{ type: "plain_text", text: error.message }],
+        fields: [
+          { type: "mrkdwn", text: `*Job:* ${context?.jobName ?? "不明"}` },
+          { type: "mrkdwn", text: `*Stage:* ${context?.stage ?? "不明"}` },
+        ],
+      },
+      {
+        type: "section",
+        text: { type: "mrkdwn", text: `\`\`\`${error.message}\n${stackLines}\`\`\`` },
       },
     ],
   };

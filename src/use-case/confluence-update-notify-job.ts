@@ -9,9 +9,11 @@ import {
   sortSearchResultsByUpdatedAtAsc,
   updateJobData,
 } from "~/services";
-import { Confluence } from "~/types";
+import { createLogger } from "~/utils";
 
 const TARGET_KEY = SLACK_ROUTE.confluenceUpdateNotifyJob;
+const JOB_NAME = "confluenceUpdateNotifyJob";
+const logger = createLogger("UpdateNotifyJob");
 
 /**
  * 定期実行される通知ジョブのメイン処理を実行します。
@@ -22,17 +24,24 @@ const TARGET_KEY = SLACK_ROUTE.confluenceUpdateNotifyJob;
  * @returns {Promise<void>} 処理が完了したら解決される Promise
  */
 export async function confluenceUpdateNotifyJob() {
+  logger.info("ジョブ開始", { jobName: JOB_NAME });
+
   // 実行可能な時間帯でない場合は、処理を中断します。
-  if (!isJobExecutionAllowed("confluenceUpdateNotifyJob")) {
-    console.log("'confluenceUpdateNotifyJob' は実行可能な時間ではないので、処理を中断しました。");
+  if (!isJobExecutionAllowed(JOB_NAME)) {
+    logger.info("実行時間外のためスキップ", {
+      jobName: JOB_NAME,
+      currentTime: new Date().toISOString(),
+    });
     return;
   }
 
   try {
     await executeMainProcess();
+    logger.info("ジョブ完了", { jobName: JOB_NAME });
   } catch (error: unknown) {
     if (error instanceof Error) {
-      await sendSlackException(error, TARGET_KEY);
+      logger.error("ジョブ失敗", error, { jobName: JOB_NAME });
+      await sendSlackException(error, TARGET_KEY, { jobName: JOB_NAME });
     }
   }
 }
@@ -44,12 +53,10 @@ async function executeMainProcess() {
     jobData?.timestamp && !Number.isNaN(new Date(jobData?.timestamp).getTime())
       ? jobData?.timestamp
       : new Date(Date.now() - 15 * 60 * 1000).toISOString();
+  logger.debug("前回タイムスタンプ取得", { jobName: JOB_NAME, timestamp: timestampISOString });
 
   // タイムスタンプ以降に更新されたページ一覧を取得
-  const recentChangePages = await fetchRecentChanges(
-    timestampISOString,
-    "confluenceUpdateNotifyJob",
-  );
+  const recentChangePages = await fetchRecentChanges(timestampISOString, JOB_NAME);
 
   // Confluence API から取得した検索結果を時系列順に並べ替え、
   // 各結果を Slack メッセージのペイロードに変換して順次送信します。
@@ -57,8 +64,18 @@ async function executeMainProcess() {
   const sortedSearchResults = sortSearchResultsByUpdatedAtAsc(recentChangePages.results);
   const baseUrl = recentChangePages._links?.base || "";
   for (const result of sortedSearchResults) {
-    const payload = convertSearchResultToMessagePayload(result, baseUrl, "confluenceUpdateNotifyJob");
+    const payload = convertSearchResultToMessagePayload(
+      result,
+      baseUrl,
+      "confluenceUpdateNotifyJob",
+    );
     await sendSlackMessage(payload, TARGET_KEY);
+  }
+
+  if (sortedSearchResults.length === 0) {
+    logger.info("変更なし", { jobName: JOB_NAME });
+  } else {
+    logger.info("変更検出", { jobName: JOB_NAME, count: sortedSearchResults.length });
   }
 
   // 最も最近の更新日時を特定し次回以降の差分取得に備えてタイムスタンプを保存する

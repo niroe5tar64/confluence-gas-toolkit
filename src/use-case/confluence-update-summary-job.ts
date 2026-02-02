@@ -8,16 +8,22 @@ import {
   sendSlackMessage,
   updateJobData,
 } from "~/services";
-import { JobDataForSummaryJob } from "~/types";
+import type { JobDataForSummaryJob } from "~/types";
+import { createLogger } from "~/utils";
 
 const TARGET_KEY = SLACK_ROUTE.confluenceUpdateSummaryJob;
+const JOB_NAME = "confluenceUpdateSummaryJob";
+const logger = createLogger("UpdateSummaryJob");
 
 export async function confluenceUpdateSummaryJob() {
+  logger.info("ジョブ開始", { jobName: JOB_NAME });
   try {
     await executeMainProcess();
+    logger.info("ジョブ完了", { jobName: JOB_NAME });
   } catch (error: unknown) {
     if (error instanceof Error) {
-      await sendSlackException(error, TARGET_KEY);
+      logger.error("ジョブ失敗", error, { jobName: JOB_NAME });
+      await sendSlackException(error, TARGET_KEY, { jobName: JOB_NAME });
     }
   }
 }
@@ -40,15 +46,13 @@ async function executeMainProcess() {
     jobData.timestamp && !Number.isNaN(new Date(jobData.timestamp).getTime())
       ? jobData.timestamp
       : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  logger.debug("前回タイムスタンプ取得", { jobName: JOB_NAME, timestamp: timestampISOString });
 
   // タイムスタンプ以降に更新されたページ一覧を取得（最大 limit 件まで）
-  const recentChangePages = await fetchRecentChanges(
-    timestampISOString,
-    "confluenceUpdateSummaryJob",
-  );
+  const recentChangePages = await fetchRecentChanges(timestampISOString, JOB_NAME);
 
   if (recentChangePages.results.length === 0) {
-    console.log("最近の変更はありません。");
+    logger.info("変更なし", { jobName: JOB_NAME });
     return;
   }
 
@@ -77,7 +81,7 @@ async function executeMainProcess() {
 
 // サマリー生成用データの初期化プロセス
 async function initializeSummaryDataProcess() {
-  const searchPages = await fetchAllPages("confluenceUpdateSummaryJob");
+  const searchPages = await fetchAllPages(JOB_NAME);
   const pages = searchPages.results.map((result) => ({
     pageId: result.id,
     originalVersion: result.version?.number ?? 1,
@@ -93,5 +97,5 @@ async function initializeSummaryDataProcess() {
     ),
   };
   updateJobData(jobData, "confluence-summary-job.json");
-  console.log("サマリー生成用データを初期化しました。");
+  logger.info("サマリー生成用データを初期化しました。", { jobName: JOB_NAME });
 }

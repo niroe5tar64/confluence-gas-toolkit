@@ -1,6 +1,6 @@
 import { getConfluenceClient } from "~/clients";
 import type { Confluence, JobName } from "~/types";
-import { formatDateJST } from "~/utils";
+import { createLogger, formatDateJST } from "~/utils";
 
 /**
  * Confluence API を呼び出す汎用サービス関数。
@@ -16,7 +16,7 @@ import { formatDateJST } from "~/utils";
  */
 export async function fetchConfluenceApi<T>(endpoint: string, jobName: JobName): Promise<T> {
   const client = getConfluenceClient(jobName);
-  return client.callApi<Promise<T>>("GET", endpoint);
+  return client.callApi<T>("GET", endpoint);
 }
 
 /**
@@ -35,7 +35,10 @@ export async function fetchRecentChanges(
   jobName: JobName,
 ): Promise<Confluence.SearchPage> {
   const client = getConfluenceClient(jobName);
+  const logger = createLogger("RecentChanges");
   const extraCql = `lastModified > '${formatDateJST(timestamp)}' ORDER BY lastModified DESC`; // 指定した日時以降に変更されたページを取得
+
+  logger.debug("検索開始", { cql: extraCql, rootPageIds: client.rootPageIds });
 
   const searchPages = await client.getSearchPage({
     extraCql,
@@ -44,12 +47,27 @@ export async function fetchRecentChanges(
   // 検索結果が複数ページに渡る場合、すべてのページをループで取得する
   let searchResults = searchPages.results;
   let nextEndpoint = searchPages._links?.next;
+  let pageCount = 1;
   while (nextEndpoint) {
+    pageCount += 1;
     const nextPages = await fetchConfluenceApi<Confluence.SearchPage>(nextEndpoint, jobName);
     // 結果を蓄積
     searchResults = [...searchResults, ...nextPages.results];
+    logger.debug("ページネーション", {
+      page: pageCount,
+      fetchedCount: nextPages.results.length,
+      cumulative: searchResults.length,
+      hasNext: !!nextPages._links?.next,
+    });
     nextEndpoint = nextPages._links?.next;
   }
+
+  logger.info("検索完了", {
+    totalCount: searchResults.length,
+    pageCount,
+    rootPageIds: client.rootPageIds,
+  });
+
   return { ...searchPages, results: searchResults };
 }
 

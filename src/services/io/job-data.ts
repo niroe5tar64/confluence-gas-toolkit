@@ -1,6 +1,8 @@
 import { IO_CONFIG } from "~/config";
 import { isJobData, type JobData, type JobDataFileName } from "~/types";
-import { readFile, writeFile } from "~/utils";
+import { createLogger, readFile, writeFile } from "~/utils";
+
+const logger = createLogger("JobData");
 
 /**
  * デフォルトのポーリング情報を生成する関数。
@@ -36,7 +38,21 @@ function defaultJobData(): JobData {
 export function updateJobData(partialJobData: Partial<JobData>, fileName: JobDataFileName): void {
   const jobData = { ...defaultJobData(), ...partialJobData };
 
-  writeFile(`${IO_CONFIG.dataDir}/${fileName}`, JSON.stringify(jobData, null, 2));
+  try {
+    writeFile(`${IO_CONFIG.dataDir}/${fileName}`, JSON.stringify(jobData, null, 2));
+    logger.debug("ジョブデータ書き込み成功", {
+      fileName,
+      timestamp: jobData.timestamp,
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      logger.error("ジョブデータ書き込み失敗", error, {
+        fileName,
+        timestamp: jobData.timestamp,
+      });
+    }
+    throw error;
+  }
 }
 
 /**
@@ -64,8 +80,25 @@ export function parseJobData(fileName: JobDataFileName): JobData | null {
   try {
     const jobData = readFile(`${IO_CONFIG.dataDir}/${fileName}`);
 
-    return isJobData(jobData) ? jobData : null;
-  } catch (_error) {
+    if (!isJobData(jobData)) {
+      logger.warn("ジョブデータ形式不正、デフォルト値を使用", {
+        fileName,
+        reason: "invalid format",
+      });
+      return null;
+    }
+
+    logger.debug("ジョブデータ読み込み成功", {
+      fileName,
+      timestamp: jobData.timestamp,
+    });
+    return jobData;
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : "unknown error";
+    logger.warn("ジョブデータ読み込み失敗、デフォルト値を使用", {
+      fileName,
+      reason,
+    });
     return null;
   }
 }

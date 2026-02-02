@@ -9,23 +9,33 @@ import {
   sortSearchResultsByUpdatedAtAsc,
   updateJobData,
 } from "~/services";
+import { createLogger } from "~/utils";
 
 const TARGET_KEY = SLACK_ROUTE.confluenceCreateNotifyJob;
+const JOB_NAME = "confluenceCreateNotifyJob";
+const logger = createLogger("CreateNotifyJob");
 
 /**
  * ページ新規作成時の通知ジョブ
  */
 export async function confluenceCreateNotifyJob() {
-  if (!isJobExecutionAllowed("confluenceCreateNotifyJob")) {
-    console.log("'confluenceCreateNotifyJob' は実行可能な時間ではないので、処理を中断しました。");
+  logger.info("ジョブ開始", { jobName: JOB_NAME });
+
+  if (!isJobExecutionAllowed(JOB_NAME)) {
+    logger.info("実行時間外のためスキップ", {
+      jobName: JOB_NAME,
+      currentTime: new Date().toISOString(),
+    });
     return;
   }
 
   try {
     await executeMainProcess();
+    logger.info("ジョブ完了", { jobName: JOB_NAME });
   } catch (error: unknown) {
     if (error instanceof Error) {
-      await sendSlackException(error, TARGET_KEY);
+      logger.error("ジョブ失敗", error, { jobName: JOB_NAME });
+      await sendSlackException(error, TARGET_KEY, { jobName: JOB_NAME });
     }
   }
 }
@@ -37,12 +47,10 @@ async function executeMainProcess() {
     jobData?.timestamp && !Number.isNaN(new Date(jobData.timestamp).getTime())
       ? jobData.timestamp
       : new Date(Date.now() - 15 * 60 * 1000).toISOString();
+  logger.debug("前回タイムスタンプ取得", { jobName: JOB_NAME, timestamp: timestampISOString });
 
   // タイムスタンプ以降に更新されたページ一覧を取得
-  const recentChangePages = await fetchRecentChanges(
-    timestampISOString,
-    "confluenceCreateNotifyJob",
-  );
+  const recentChangePages = await fetchRecentChanges(timestampISOString, JOB_NAME);
 
   const createdAtThreshold = new Date(timestampISOString);
   const createdPages = recentChangePages.results.filter((result) => {
@@ -56,12 +64,14 @@ async function executeMainProcess() {
   const sortedSearchResults = sortSearchResultsByUpdatedAtAsc(createdPages);
   const baseUrl = recentChangePages._links?.base || "";
   for (const result of sortedSearchResults) {
-    const payload = convertSearchResultToMessagePayload(
-      result,
-      baseUrl,
-      "confluenceCreateNotifyJob",
-    );
+    const payload = convertSearchResultToMessagePayload(result, baseUrl, JOB_NAME);
     await sendSlackMessage(payload, TARGET_KEY);
+  }
+
+  if (sortedSearchResults.length === 0) {
+    logger.info("変更なし", { jobName: JOB_NAME });
+  } else {
+    logger.info("変更検出", { jobName: JOB_NAME, count: sortedSearchResults.length });
   }
 
   const updatedAtList: Date[] = recentChangePages.results
