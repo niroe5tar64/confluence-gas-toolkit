@@ -1,4 +1,4 @@
-import { CONFLUENCE_PAGE_CONFIGS, type PageConfig } from "~/config";
+import { CONFLUENCE_PAGE_CONFIGS, type PageConfig, validatePageConfigs } from "~/config";
 import type { Confluence, JobName } from "~/types";
 import { getEnvVariable, toQueryString } from "~/utils";
 
@@ -11,37 +11,6 @@ let cachedPageConfigs: Record<JobName, PageConfig> | null = null;
 const clientsMap = new Map<JobName, ConfluenceClient>();
 
 /**
- * 値が PageConfig 型かどうかを検証
- */
-function isPageConfig(value: unknown): value is PageConfig {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "rootPageIds" in value &&
-    Array.isArray((value as PageConfig).rootPageIds) &&
-    (value as PageConfig).rootPageIds.every((id) => typeof id === "string") &&
-    "spaceKey" in value &&
-    typeof (value as PageConfig).spaceKey === "string"
-  );
-}
-
-/**
- * 値が Record<JobName, PageConfig> 型かどうかを検証
- */
-function isPageConfigRecord(value: unknown): value is Record<JobName, PageConfig> {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return false;
-  }
-  const record = value as Record<string, unknown>;
-  const jobNames: JobName[] = [
-    "confluenceUpdateNotifyJob",
-    "confluenceUpdateSummaryJob",
-    "confluenceCreateNotifyJob",
-  ];
-  return jobNames.every((jobName) => jobName in record && isPageConfig(record[jobName]));
-}
-
-/**
  * ページ設定をパースして返す
  */
 function getPageConfigs(): Record<JobName, PageConfig> {
@@ -49,15 +18,7 @@ function getPageConfigs(): Record<JobName, PageConfig> {
     return cachedPageConfigs;
   }
 
-  if (!CONFLUENCE_PAGE_CONFIGS) {
-    throw new Error("CONFLUENCE_PAGE_CONFIGS が未設定です");
-  }
-
-  if (!isPageConfigRecord(CONFLUENCE_PAGE_CONFIGS)) {
-    throw new Error("CONFLUENCE_PAGE_CONFIGS の形式が不正です");
-  }
-
-  cachedPageConfigs = CONFLUENCE_PAGE_CONFIGS;
+  cachedPageConfigs = validatePageConfigs(CONFLUENCE_PAGE_CONFIGS);
   return cachedPageConfigs;
 }
 

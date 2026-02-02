@@ -1,10 +1,33 @@
-import { afterEach, beforeEach, describe, expect, it, spyOn } from "bun:test";
-import { setConfluencePageConfigsForTest } from "~/config";
+import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
 import * as utils from "~/utils";
-import ConfluenceClient, {
-  getConfluenceClient,
-  resetConfluenceClientCache,
-} from "./confluence-client";
+import { CONFLUENCE_PAGE_CONFIGS as SAMPLE_PAGE_CONFIGS } from "../config/confluence-page-configs.sample";
+
+// 必要なエクスポートを個別にインポート
+import { IO_CONFIG } from "../config/io-config";
+import { jobExecutionPolicy } from "../config/job-schedule";
+import {
+  isPageConfig,
+  isPageConfigRecord,
+  validatePageConfigs,
+} from "../config/page-config-validator";
+import { SLACK_MESSAGES } from "../config/slack-messages";
+import { SLACK_ROUTE } from "../config/slack-routes";
+
+// ~/config モジュールをモック（サンプル設定を使用）
+mock.module("~/config", () => ({
+  CONFLUENCE_PAGE_CONFIGS: SAMPLE_PAGE_CONFIGS,
+  IO_CONFIG,
+  jobExecutionPolicy,
+  isPageConfig,
+  isPageConfigRecord,
+  validatePageConfigs,
+  SLACK_MESSAGES,
+  SLACK_ROUTE,
+}));
+
+// モック後にインポート
+const { getConfluenceClient, resetConfluenceClientCache } = await import("./confluence-client");
+const ConfluenceClient = (await import("./confluence-client")).default;
 
 describe("getConfluenceClient", () => {
   let getEnvVariableSpy: ReturnType<typeof spyOn>;
@@ -12,92 +35,31 @@ describe("getConfluenceClient", () => {
   beforeEach(() => {
     resetConfluenceClientCache();
     getEnvVariableSpy = spyOn(utils, "getEnvVariable");
-    setConfluencePageConfigsForTest(null);
   });
 
   afterEach(() => {
     getEnvVariableSpy.mockRestore();
-    setConfluencePageConfigsForTest(null);
     resetConfluenceClientCache();
   });
 
   describe("CONFLUENCE_PAGE_CONFIGS が設定されている場合", () => {
     it("指定されたジョブ名に対応する ConfluenceClient を返す", () => {
-      const pageConfigs = {
-        confluenceUpdateNotifyJob: {
-          rootPageIds: ["123"],
-          spaceKey: "SPACE_A",
-        },
-        confluenceUpdateSummaryJob: {
-          rootPageIds: ["456"],
-          spaceKey: "SPACE_B",
-        },
-        confluenceCreateNotifyJob: {
-          rootPageIds: ["789"],
-          spaceKey: "SPACE_C",
-        },
-      };
-
       getEnvVariableSpy.mockImplementation((key: string) => {
         if (key === "CONFLUENCE_URL") return "https://confluence.example.com";
         if (key === "CONFLUENCE_PAT") return "test-token";
         return "";
       });
-      setConfluencePageConfigsForTest(pageConfigs);
-
-      const client = getConfluenceClient("confluenceUpdateNotifyJob");
-      expect(client).toBeDefined();
-    });
-
-    it("複数ページが指定されている場合、すべてのページに対応する", () => {
-      const pageConfigs = {
-        confluenceUpdateNotifyJob: {
-          rootPageIds: ["123", "456"],
-          spaceKey: "SPACE_A",
-        },
-        confluenceUpdateSummaryJob: {
-          rootPageIds: ["789"],
-          spaceKey: "SPACE_B",
-        },
-        confluenceCreateNotifyJob: {
-          rootPageIds: ["012"],
-          spaceKey: "SPACE_C",
-        },
-      };
-
-      getEnvVariableSpy.mockImplementation((key: string) => {
-        if (key === "CONFLUENCE_URL") return "https://confluence.example.com";
-        if (key === "CONFLUENCE_PAT") return "test-token";
-        return "";
-      });
-      setConfluencePageConfigsForTest(pageConfigs);
 
       const client = getConfluenceClient("confluenceUpdateNotifyJob");
       expect(client).toBeDefined();
     });
 
     it("同じジョブ名で呼び出すと同じインスタンスを返す（キャッシュ）", () => {
-      const pageConfigs = {
-        confluenceUpdateNotifyJob: {
-          rootPageIds: ["123"],
-          spaceKey: "SPACE_A",
-        },
-        confluenceUpdateSummaryJob: {
-          rootPageIds: ["456"],
-          spaceKey: "SPACE_B",
-        },
-        confluenceCreateNotifyJob: {
-          rootPageIds: ["789"],
-          spaceKey: "SPACE_C",
-        },
-      };
-
       getEnvVariableSpy.mockImplementation((key: string) => {
         if (key === "CONFLUENCE_URL") return "https://confluence.example.com";
         if (key === "CONFLUENCE_PAT") return "test-token";
         return "";
       });
-      setConfluencePageConfigsForTest(pageConfigs);
 
       const client1 = getConfluenceClient("confluenceUpdateNotifyJob");
       const client2 = getConfluenceClient("confluenceUpdateNotifyJob");
@@ -105,27 +67,11 @@ describe("getConfluenceClient", () => {
     });
 
     it("異なるジョブ名で呼び出すと異なるインスタンスを返す", () => {
-      const pageConfigs = {
-        confluenceUpdateNotifyJob: {
-          rootPageIds: ["123"],
-          spaceKey: "SPACE_A",
-        },
-        confluenceUpdateSummaryJob: {
-          rootPageIds: ["456"],
-          spaceKey: "SPACE_B",
-        },
-        confluenceCreateNotifyJob: {
-          rootPageIds: ["789"],
-          spaceKey: "SPACE_C",
-        },
-      };
-
       getEnvVariableSpy.mockImplementation((key: string) => {
         if (key === "CONFLUENCE_URL") return "https://confluence.example.com";
         if (key === "CONFLUENCE_PAT") return "test-token";
         return "";
       });
-      setConfluencePageConfigsForTest(pageConfigs);
 
       const client1 = getConfluenceClient("confluenceUpdateNotifyJob");
       const client2 = getConfluenceClient("confluenceUpdateSummaryJob");
@@ -135,27 +81,11 @@ describe("getConfluenceClient", () => {
 
   describe("エラーハンドリング", () => {
     it("CONFLUENCE_URL が設定されていない場合はエラーをスロー", () => {
-      const pageConfigs = {
-        confluenceUpdateNotifyJob: {
-          rootPageIds: ["123"],
-          spaceKey: "SPACE_A",
-        },
-        confluenceUpdateSummaryJob: {
-          rootPageIds: ["456"],
-          spaceKey: "SPACE_B",
-        },
-        confluenceCreateNotifyJob: {
-          rootPageIds: ["789"],
-          spaceKey: "SPACE_C",
-        },
-      };
-
       getEnvVariableSpy.mockImplementation((key: string) => {
         // CONFLUENCE_URL がない
         if (key === "CONFLUENCE_PAT") return "test-token";
         return "";
       });
-      setConfluencePageConfigsForTest(pageConfigs);
 
       expect(() => getConfluenceClient("confluenceUpdateNotifyJob")).toThrow(
         "必須環境変数が未設定です: CONFLUENCE_URL",
@@ -163,165 +93,19 @@ describe("getConfluenceClient", () => {
     });
 
     it("CONFLUENCE_PAT が設定されていない場合はエラーをスロー", () => {
-      const pageConfigs = {
-        confluenceUpdateNotifyJob: {
-          rootPageIds: ["123"],
-          spaceKey: "SPACE_A",
-        },
-        confluenceUpdateSummaryJob: {
-          rootPageIds: ["456"],
-          spaceKey: "SPACE_B",
-        },
-        confluenceCreateNotifyJob: {
-          rootPageIds: ["789"],
-          spaceKey: "SPACE_C",
-        },
-      };
-
       getEnvVariableSpy.mockImplementation((key: string) => {
         if (key === "CONFLUENCE_URL") return "https://confluence.example.com";
         // CONFLUENCE_PAT がない
         return "";
       });
-      setConfluencePageConfigsForTest(pageConfigs);
 
       expect(() => getConfluenceClient("confluenceUpdateNotifyJob")).toThrow(
         "必須環境変数が未設定です: CONFLUENCE_PAT",
       );
     });
-
-    it("CONFLUENCE_PAGE_CONFIGS が未設定の場合はエラーをスロー", () => {
-      getEnvVariableSpy.mockImplementation((key: string) => {
-        if (key === "CONFLUENCE_URL") return "https://confluence.example.com";
-        if (key === "CONFLUENCE_PAT") return "test-token";
-        return "";
-      });
-
-      expect(() => getConfluenceClient("confluenceUpdateNotifyJob")).toThrow(
-        "CONFLUENCE_PAGE_CONFIGS が未設定です",
-      );
-    });
-
-    it("CONFLUENCE_PAGE_CONFIGS が不正な場合はエラーをスロー", () => {
-      getEnvVariableSpy.mockImplementation((key: string) => {
-        if (key === "CONFLUENCE_URL") return "https://confluence.example.com";
-        if (key === "CONFLUENCE_PAT") return "test-token";
-        return "";
-      });
-      setConfluencePageConfigsForTest({ invalid: "format" } as never);
-
-      expect(() => getConfluenceClient("confluenceUpdateNotifyJob")).toThrow(
-        "CONFLUENCE_PAGE_CONFIGS の形式が不正です",
-      );
-    });
   });
 
-  describe("型検証", () => {
-    it("rootPageIds が配列でない場合はエラーをスロー", () => {
-      const pageConfigs = {
-        confluenceUpdateNotifyJob: {
-          rootPageIds: "not-an-array", // 配列でない
-          spaceKey: "SPACE_A",
-        },
-        confluenceUpdateSummaryJob: {
-          rootPageIds: ["456"],
-          spaceKey: "SPACE_B",
-        },
-        confluenceCreateNotifyJob: {
-          rootPageIds: ["789"],
-          spaceKey: "SPACE_C",
-        },
-      };
-
-      getEnvVariableSpy.mockImplementation((key: string) => {
-        if (key === "CONFLUENCE_URL") return "https://confluence.example.com";
-        if (key === "CONFLUENCE_PAT") return "test-token";
-        return "";
-      });
-      setConfluencePageConfigsForTest(pageConfigs as never);
-
-      expect(() => getConfluenceClient("confluenceUpdateNotifyJob")).toThrow(
-        "CONFLUENCE_PAGE_CONFIGS の形式が不正です",
-      );
-    });
-
-    it("spaceKey がない場合はエラーをスロー", () => {
-      const pageConfigs = {
-        confluenceUpdateNotifyJob: {
-          rootPageIds: ["123"],
-          // spaceKey がない
-        },
-        confluenceUpdateSummaryJob: {
-          rootPageIds: ["456"],
-          spaceKey: "SPACE_B",
-        },
-        confluenceCreateNotifyJob: {
-          rootPageIds: ["789"],
-          spaceKey: "SPACE_C",
-        },
-      };
-
-      getEnvVariableSpy.mockImplementation((key: string) => {
-        if (key === "CONFLUENCE_URL") return "https://confluence.example.com";
-        if (key === "CONFLUENCE_PAT") return "test-token";
-        return "";
-      });
-      setConfluencePageConfigsForTest(pageConfigs as never);
-
-      expect(() => getConfluenceClient("confluenceUpdateNotifyJob")).toThrow(
-        "CONFLUENCE_PAGE_CONFIGS の形式が不正です",
-      );
-    });
-
-    it("ジョブ名が不足している場合はエラーをスロー", () => {
-      const pageConfigs = {
-        confluenceUpdateNotifyJob: {
-          rootPageIds: ["123"],
-          spaceKey: "SPACE_A",
-        },
-        // confluenceUpdateSummaryJob と confluenceCreateNotifyJob がない
-      };
-
-      getEnvVariableSpy.mockImplementation((key: string) => {
-        if (key === "CONFLUENCE_URL") return "https://confluence.example.com";
-        if (key === "CONFLUENCE_PAT") return "test-token";
-        return "";
-      });
-      setConfluencePageConfigsForTest(pageConfigs as never);
-
-      expect(() => getConfluenceClient("confluenceUpdateNotifyJob")).toThrow(
-        "CONFLUENCE_PAGE_CONFIGS の形式が不正です",
-      );
-    });
-
-    it("rootPageIds に文字列以外が含まれている場合はエラーをスロー", () => {
-      const pageConfigs = {
-        confluenceUpdateNotifyJob: {
-          rootPageIds: ["123", 456], // 数値が含まれている
-          spaceKey: "SPACE_A",
-        },
-        confluenceUpdateSummaryJob: {
-          rootPageIds: ["456"],
-          spaceKey: "SPACE_B",
-        },
-        confluenceCreateNotifyJob: {
-          rootPageIds: ["789"],
-          spaceKey: "SPACE_C",
-        },
-      };
-
-      getEnvVariableSpy.mockImplementation((key: string) => {
-        if (key === "CONFLUENCE_URL") return "https://confluence.example.com";
-        if (key === "CONFLUENCE_PAT") return "test-token";
-        return "";
-      });
-      setConfluencePageConfigsForTest(pageConfigs as never);
-
-      expect(() => getConfluenceClient("confluenceUpdateNotifyJob")).toThrow(
-        "CONFLUENCE_PAGE_CONFIGS の形式が不正です",
-      );
-    });
-  });
+  // 注意: CONFLUENCE_PAGE_CONFIGS の検証テストは page-config-validator.test.ts に移動済み
 
   describe("廃止されたAPI", () => {
     it("getInstance() は削除されている", () => {
@@ -339,7 +123,7 @@ describe("getConfluenceClient", () => {
             spaceKey: string,
             rootPageId: string,
             rootPageIds?: string[],
-          ): ConfluenceClient;
+          ): InstanceType<typeof ConfluenceClient>;
         }
       )("https://confluence.example.com", "token", "SPACE", "root", []);
 

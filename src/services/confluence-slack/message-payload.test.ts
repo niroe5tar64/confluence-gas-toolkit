@@ -1,5 +1,6 @@
-import { beforeAll, describe, expect, it, mock } from "bun:test";
+import { describe, expect, it, mock } from "bun:test";
 import type { Confluence } from "~/types";
+import { SLACK_MESSAGES as SAMPLE_SLACK_MESSAGES } from "../../config/slack-messages.sample";
 
 // 環境変数のモック
 mock.module("~/utils", () => ({
@@ -11,6 +12,12 @@ mock.module("~/utils", () => ({
     Object.entries(params)
       .map(([k, v]) => `${k}=${v}`)
       .join("&"),
+}));
+
+// SLACK_MESSAGESをサンプルファイルの値でモック
+// slack-messages.sample.ts の値を参照
+mock.module("~/config", () => ({
+  SLACK_MESSAGES: SAMPLE_SLACK_MESSAGES,
 }));
 
 // モック後にインポート
@@ -32,7 +39,11 @@ describe("convertSearchResultToMessagePayload", () => {
         },
       };
 
-      const result = convertSearchResultToMessagePayload(searchResult, baseUrl, "confluenceUpdateNotifyJob");
+      const result = convertSearchResultToMessagePayload(
+        searchResult,
+        baseUrl,
+        "confluenceUpdateNotifyJob",
+      );
 
       expect(result.blocks).toBeDefined();
       expect(result.blocks).toHaveLength(2);
@@ -68,7 +79,11 @@ describe("convertSearchResultToMessagePayload", () => {
         },
       };
 
-      const result = convertSearchResultToMessagePayload(searchResult, baseUrl, "confluenceUpdateNotifyJob");
+      const result = convertSearchResultToMessagePayload(
+        searchResult,
+        baseUrl,
+        "confluenceUpdateNotifyJob",
+      );
 
       const sectionBlock = result.blocks?.[1] as { type: string; fields: { text: string }[] };
       // バージョン1なので diff リンクは含まれない
@@ -86,7 +101,11 @@ describe("convertSearchResultToMessagePayload", () => {
         // version なし
       };
 
-      const result = convertSearchResultToMessagePayload(searchResult, baseUrl, "confluenceUpdateNotifyJob");
+      const result = convertSearchResultToMessagePayload(
+        searchResult,
+        baseUrl,
+        "confluenceUpdateNotifyJob",
+      );
 
       const sectionBlock = result.blocks?.[1] as { type: string; fields: { text: string }[] };
       // 更新者と更新日時が「不明」
@@ -100,7 +119,11 @@ describe("convertSearchResultToMessagePayload", () => {
         type: "page",
       };
 
-      const result = convertSearchResultToMessagePayload(searchResult, baseUrl, "confluenceUpdateNotifyJob");
+      const result = convertSearchResultToMessagePayload(
+        searchResult,
+        baseUrl,
+        "confluenceUpdateNotifyJob",
+      );
 
       const sectionBlock = result.blocks?.[1] as { type: string; fields: { text: string }[] };
       expect(sectionBlock.fields[0].text).not.toContain("diff");
@@ -120,7 +143,11 @@ describe("convertSearchResultToMessagePayload", () => {
         },
       };
 
-      const result = convertSearchResultToMessagePayload(searchResult, baseUrl, "confluenceUpdateNotifyJob");
+      const result = convertSearchResultToMessagePayload(
+        searchResult,
+        baseUrl,
+        "confluenceUpdateNotifyJob",
+      );
 
       const sectionBlock = result.blocks?.[1] as { type: string; fields: { text: string }[] };
       expect(sectionBlock.fields[0].text).toContain(
@@ -140,7 +167,11 @@ describe("convertSearchResultToMessagePayload", () => {
         },
       };
 
-      const result = convertSearchResultToMessagePayload(searchResult, baseUrl, "confluenceUpdateNotifyJob");
+      const result = convertSearchResultToMessagePayload(
+        searchResult,
+        baseUrl,
+        "confluenceUpdateNotifyJob",
+      );
 
       const sectionBlock = result.blocks?.[1] as { type: string; fields: { text: string }[] };
       // diff URL には originalVersion=9 と revisedVersion=10 が含まれる
@@ -162,7 +193,11 @@ describe("convertSearchResultToMessagePayload", () => {
         },
       };
 
-      const result = convertSearchResultToMessagePayload(searchResult, baseUrl, "confluenceUpdateNotifyJob");
+      const result = convertSearchResultToMessagePayload(
+        searchResult,
+        baseUrl,
+        "confluenceUpdateNotifyJob",
+      );
 
       const sectionBlock = result.blocks?.[1] as { type: string; fields: { text: string }[] };
       expect(sectionBlock.fields[0].text).toContain("テスト<>&\"'ページ");
