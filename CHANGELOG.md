@@ -4,6 +4,16 @@
 
 フォーマットは [Keep a Changelog](https://keepachangelog.com/ja/1.0.0/) に基づいています。
 
+## [0.1.1] - 2026-02-03
+
+### Added
+- 環境別データディレクトリ対応
+  - 本番環境: `confluence-gas-toolkit/prod/`
+  - 開発環境: `confluence-gas-toolkit/dev/`
+  - `getAppEnv()` 関数で環境判定
+  - `IO_CONFIG.dataDir` で環境別ディレクトリを自動選択
+  - ビルド時に `APP_ENV` を埋め込み（`--prod` フラグで制御）
+
 ## [0.1.0] - 2026-02-02
 
 ### Added
