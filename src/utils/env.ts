@@ -7,6 +7,21 @@ export function isLocalEnvironment(): boolean {
   return typeof process !== "undefined" && process.env.TARGET !== "GAS";
 }
 
+/** アプリケーション環境の型 */
+export type AppEnv = "dev" | "prod";
+
+/**
+ * 現在のアプリケーション環境を取得する。
+ *
+ * - GAS環境: ビルド時に埋め込まれた `process.env.APP_ENV` を返す
+ * - ローカル環境: `process.env.APP_ENV` を返す（未設定時は "dev"）
+ *
+ * @returns {AppEnv} "prod" または "dev"
+ */
+export function getAppEnv(): AppEnv {
+  return process.env.APP_ENV === "prod" ? "prod" : "dev";
+}
+
 /**
  * 引数で指定したキーの環境変数を取得する。
  *

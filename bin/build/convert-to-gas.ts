@@ -42,6 +42,8 @@ const resolveEnvPath = () => {
 
 const build = async (filename: string, name: string) => {
   loadDotEnv(resolveEnvPath());
+  const isProdBuild = process.argv.includes("--prod");
+  const appEnv = isProdBuild || process.env.APP_ENV === "prod" ? "prod" : "dev";
   const res = await buildUsingVite({
     root: process.cwd(),
     build: {
@@ -55,6 +57,7 @@ const build = async (filename: string, name: string) => {
     },
     define: {
       "process.env.TARGET": JSON.stringify("GAS"), // GAS 環境としてビルド
+      "process.env.APP_ENV": JSON.stringify(appEnv),
     },
   });
   const code = Array.isArray(res) ? res[0].output[0].code : "";

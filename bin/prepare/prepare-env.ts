@@ -8,7 +8,7 @@ import path from "node:path";
 const prepareEnv = async (): Promise<void> => {
   const prod = process.argv.some((arg) => arg === "--prod");
   const envFile = prod ? ".env.prod" : ".env.dev";
-  const projectRoot = path.resolve(import.meta.dir, "../../");
+  const projectRoot = process.cwd();
   const sourceFile = path.join(projectRoot, envFile);
   const destFile = path.join(projectRoot, ".env");
 

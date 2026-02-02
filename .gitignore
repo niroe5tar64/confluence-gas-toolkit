@@ -173,7 +173,7 @@ dist
 .DS_Store
 
 dist
-data
+confluence-gas-toolkit/
 .clasp*.json
 
 # Claude Code local overrides
