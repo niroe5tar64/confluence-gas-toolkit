@@ -23,7 +23,7 @@ src/index.ts → use-case/ → services/ → clients/
 
 - `use-case/`: ジョブオーケストレーション
 - `services/`: ビジネスロジック（confluence/, slack/, confluence-slack/, scheduler/, io/）
-- `config/`: 設定ファイル（job-schedule, confluence-page-configs, slack-routes）
+- `config/`: 設定ファイル（job-schedule, confluence-page-configs, slack-routes, slack-messages, io-config）
 - `clients/`: APIクライアント（デュアル環境対応）
 - `types/`: 型定義
 - `utils/`: ユーティリティ

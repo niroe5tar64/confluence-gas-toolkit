@@ -140,7 +140,8 @@ src/
 │   ├── job-schedule.ts   # ジョブ実行スケジュール
 │   ├── confluence-page-configs.ts  # 監視対象ページ
 │   ├── slack-routes.ts   # Slack Webhook ルーティング
-│   └── slack-messages.ts # Slack メッセージ文言
+│   ├── slack-messages.ts # Slack メッセージ文言
+│   └── io-config.ts      # 環境別データディレクトリ設定
 ├── services/             # ビジネスロジック
 │   ├── confluence/       # Confluence API 連携
 │   ├── slack/            # Slack メッセージ送信
