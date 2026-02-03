@@ -4,6 +4,24 @@
 
 フォーマットは [Keep a Changelog](https://keepachangelog.com/ja/1.0.0/) に基づいています。
 
+## [0.1.2] - 2026-02-04
+
+### Added
+- ログ基盤の実装
+  - `createLogger()` によるロガー生成
+  - ログレベル制御（DEBUG, INFO, WARN, ERROR）
+  - 構造化ログ出力対応
+
+### Changed
+- ページ設定の検証ロジックを分離してテストの型安全性を向上
+- `JobExecutionRule` の import を type import に変更
+- Lint ルール修正と未使用変数の削除
+
+### Fixed
+- テストのモック修正（`fetchRecentChangesSpy` を追加）
+- `.env.sample` ファイルのプロパティ記載漏れ対応
+- `push:prod`, `deploy:prod` ビルド時の不正な引数を削除
+
 ## [0.1.1] - 2026-02-03
 
 ### Added
