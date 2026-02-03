@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it, spyOn } from "bun:test";
 import * as utils from "~/utils";
 import SlackClient, { getSlackClient, resetSlackClientCache } from "./slack-client";
 

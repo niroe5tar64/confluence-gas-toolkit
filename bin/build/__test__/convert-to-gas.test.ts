@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import path from "path";
+import path from "node:path";
 import { convertToGoogleAppsScript } from "../convert-to-gas";
 
 describe("convert-to-gas", () => {

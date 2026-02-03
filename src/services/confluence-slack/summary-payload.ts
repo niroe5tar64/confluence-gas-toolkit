@@ -103,7 +103,7 @@ function createSlackSummaryPayload(args: SlackSummaryPayloadArgs): Slack.Message
             style: "bullet",
             indent: 0,
             elements: args.updatedPages.map((updatedPage) => {
-              const { page, diff, lastUpdated } = updatedPage;
+              const { page, diff } = updatedPage;
 
               const richTextElements: Slack.RichTextElement[] = [];
               richTextElements.push({

@@ -1,8 +1,7 @@
 import path from "node:path";
 import { question, select } from "@topcli/prompts";
 import { $ } from "bun";
-import fs from "fs-extra";
-import { ensureDirSync } from "fs-extra";
+import fs, { ensureDirSync } from "fs-extra";
 
 const clasprcPath = path.join(process.env.HOME || process.env.USERPROFILE || "", ".clasprc.json");
 

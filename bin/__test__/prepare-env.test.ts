@@ -47,9 +47,7 @@ describe("prepareEnv", () => {
     await prepareEnv();
 
     expect(warnSpy).toHaveBeenCalledTimes(1);
-    expect(warnSpy).toHaveBeenCalledWith(
-      "Warning: .env.dev not found, skipping .env preparation",
-    );
+    expect(warnSpy).toHaveBeenCalledWith("Warning: .env.dev not found, skipping .env preparation");
     expect(fs.existsSync(".env")).toBe(false);
     warnSpy.mockRestore();
   });

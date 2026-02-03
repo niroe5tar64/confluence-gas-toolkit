@@ -2,7 +2,7 @@ import fs from "node:fs";
 
 const replaceText = (text: string, dict: Record<string, string>) => {
   const escapeRegExp = (str: string) => {
-    return str.replace(/[.*+?^=!:${}()|[\]\/\\]/g, "\\$&");
+    return str.replace(/[.*+?^=!:${}()|[\]/\\]/g, "\\$&");
   };
   const openParen = escapeRegExp("${");
   const closeParen = escapeRegExp("}");

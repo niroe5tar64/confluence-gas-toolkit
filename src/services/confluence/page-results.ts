@@ -1,4 +1,4 @@
-import { Confluence } from "~/types";
+import type { Confluence } from "~/types";
 import { multiSortBy } from "~/utils";
 
 /**

@@ -32,7 +32,7 @@ describe("groupByKey", () => {
   it("should handle a key that does not exist", () => {
     // 存在しないキーを指定した場合に、`undefined` をキーとしてグルーピングされることを確認
     const items = [{ id: 1 }, { id: 2 }];
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    // biome-ignore lint/suspicious/noExplicitAny: 存在しないキーへのアクセスをテストするため
     const result = groupByKey(items, (item) => (item as any).nonExistentKey);
     expect(result).toEqual({
       undefined: [{ id: 1 }, { id: 2 }],

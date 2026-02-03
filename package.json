@@ -27,6 +27,11 @@
     "push": "bun run ./bin/push.ts",
     "push:prod": "bun run ./bin/push.ts --prod",
     "open": "bun run ./bin/open.ts",
-    "open:prod": "bun run ./bin/open.ts --prod"
+    "open:prod": "bun run ./bin/open.ts --prod",
+    "format": "biome format --write .",
+    "lint": "biome lint --write .",
+    "check": "biome check --write .",
+    "typecheck": "tsc --noEmit",
+    "validate": "bun run typecheck && bun run check"
   }
 }

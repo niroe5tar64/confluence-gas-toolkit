@@ -10,7 +10,7 @@ describe("confluenceUpdateNotifyJob", () => {
     // 各サービス関数をモック
     spyOn(services, "isJobExecutionAllowed").mockReturnValue(true);
     spyOn(services, "parseJobData").mockReturnValue({ timestamp: new Date().toISOString() });
-    const fetchRecentChangesSpy = spyOn(services, "fetchRecentChanges").mockResolvedValue({
+    spyOn(services, "fetchRecentChanges").mockResolvedValue({
       results: [],
       _links: { base: "https://confluence.example.com" },
     });
@@ -64,7 +64,7 @@ describe("confluenceUpdateNotifyJob", () => {
 
   it("無効なタイムスタンプの場合はフォールバックした日時で検索する", async () => {
     spyOn(services, "parseJobData").mockReturnValue({ timestamp: "invalid" });
-    const fetchRecentChangesSpy = spyOn(services, "fetchRecentChanges").mockResolvedValue({
+    spyOn(services, "fetchRecentChanges").mockResolvedValue({
       results: [],
       _links: { base: "https://confluence.example.com" },
     });
