@@ -5,12 +5,13 @@ import * as services from "~/services";
 describe("confluenceUpdateNotifyJob", () => {
   let sendSlackMessageSpy: ReturnType<typeof spyOn>;
   let sendSlackExceptionSpy: ReturnType<typeof spyOn>;
+  let fetchRecentChangesSpy: ReturnType<typeof spyOn>;
 
   beforeEach(() => {
     // 各サービス関数をモック
     spyOn(services, "isJobExecutionAllowed").mockReturnValue(true);
     spyOn(services, "parseJobData").mockReturnValue({ timestamp: new Date().toISOString() });
-    spyOn(services, "fetchRecentChanges").mockResolvedValue({
+    fetchRecentChangesSpy = spyOn(services, "fetchRecentChanges").mockResolvedValue({
       results: [],
       _links: { base: "https://confluence.example.com" },
     });
