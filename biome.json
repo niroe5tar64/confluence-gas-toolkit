@@ -18,7 +18,8 @@
     "actions": {
       "source": {
         "organizeImports": {
-          "level": "on"
+          "level": "on",
+          "options": {}
         }
       }
     }
