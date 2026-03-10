@@ -25,6 +25,8 @@ mock.module("~/config", () => ({
   SLACK_ROUTE,
 }));
 
+import HttpClient from "./http-client";
+
 // モック後にインポート
 const { getConfluenceClient, resetConfluenceClientCache } = await import("./confluence-client");
 const ConfluenceClient = (await import("./confluence-client")).default;
@@ -123,6 +125,7 @@ describe("getConfluenceClient", () => {
             spaceKey: string,
             rootPageId: string,
             rootPageIds?: string[],
+            tokenProvider?: () => string,
           ): InstanceType<typeof ConfluenceClient>;
         }
       )("https://confluence.example.com", "token", "SPACE", "root", []);
@@ -137,6 +140,139 @@ describe("getConfluenceClient", () => {
       expect(callApiSpy).not.toHaveBeenCalled();
       expect(result.results).toEqual([]);
       expect(result._links).toEqual({});
+    });
+  });
+
+  describe("callApi リトライ（社内API利用ルール）", () => {
+    let sleepSpy: ReturnType<typeof spyOn>;
+
+    beforeEach(() => {
+      sleepSpy = spyOn(utils, "sleep").mockResolvedValue(undefined);
+    });
+
+    afterEach(() => {
+      sleepSpy.mockRestore();
+    });
+
+    it("503 のとき10秒待機して1回リトライし、2回目で成功する", async () => {
+      const client = new ConfluenceClient(
+        "https://confluence.example.com",
+        "token",
+        "SPACE",
+        "root",
+        ["root"],
+      );
+      const mockResponse = (status: number, body: unknown) =>
+        Promise.resolve({
+          status,
+          json: () => Promise.resolve(body),
+        });
+      let callCount = 0;
+      spyOn(client as unknown as { httpRequest: HttpClient["httpRequest"] }, "httpRequest").mockImplementation(() => {
+        callCount += 1;
+        if (callCount === 1) return mockResponse(503, {});
+        return mockResponse(200, { data: "ok" });
+      });
+
+      const result = await client.callApi<{ data: string }>("GET", "/test");
+
+      expect(result).toEqual({ data: "ok" });
+      expect(callCount).toBe(2);
+      expect(sleepSpy).toHaveBeenCalledTimes(1);
+      expect(sleepSpy).toHaveBeenCalledWith(10_000);
+    });
+
+    it("503 が2回連続の場合はリトライ後に throw する", async () => {
+      const client = new ConfluenceClient(
+        "https://confluence.example.com",
+        "token",
+        "SPACE",
+        "root",
+        ["root"],
+      );
+      const mock503 = () =>
+        Promise.resolve({
+          status: 503,
+          json: () => Promise.resolve({}),
+        });
+      spyOn(client as unknown as { httpRequest: HttpClient["httpRequest"] }, "httpRequest").mockImplementation(() => mock503());
+
+      await expect(client.callApi("GET", "/test")).rejects.toThrow("HTTP Error: 503");
+      expect(sleepSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("401 のとき tokenProvider でトークン再取得して1回リトライし、2回目で成功する", async () => {
+      let tokenProviderCalls = 0;
+      const tokenProvider = () => {
+        tokenProviderCalls += 1;
+        return "new-token";
+      };
+      const client = new ConfluenceClient(
+        "https://confluence.example.com",
+        "old-token",
+        "SPACE",
+        "root",
+        ["root"],
+        tokenProvider,
+      );
+      let callCount = 0;
+      spyOn(client as unknown as { httpRequest: HttpClient["httpRequest"] }, "httpRequest").mockImplementation((_url, opts) => {
+        callCount += 1;
+        if (callCount === 1) {
+          return Promise.resolve({ status: 401, json: () => Promise.resolve({}) });
+        }
+        expect(opts?.headers?.Authorization).toBe("Bearer new-token");
+        return Promise.resolve({ status: 200, json: () => Promise.resolve({ data: "ok" }) });
+      });
+
+      const result = await client.callApi<{ data: string }>("GET", "/test");
+
+      expect(result).toEqual({ data: "ok" });
+      expect(callCount).toBe(2);
+      expect(tokenProviderCalls).toBe(1);
+    });
+
+    it("401 が2回連続の場合はリトライしないで throw する", async () => {
+      let tokenProviderCalls = 0;
+      const tokenProvider = () => {
+        tokenProviderCalls += 1;
+        return "new-token";
+      };
+      const client = new ConfluenceClient(
+        "https://confluence.example.com",
+        "token",
+        "SPACE",
+        "root",
+        ["root"],
+        tokenProvider,
+      );
+      const mock401 = () =>
+        Promise.resolve({
+          status: 401,
+          json: () => Promise.resolve({}),
+        });
+      spyOn(client as unknown as { httpRequest: HttpClient["httpRequest"] }, "httpRequest").mockImplementation(() => mock401());
+
+      await expect(client.callApi("GET", "/test")).rejects.toThrow("HTTP Error: 401");
+      expect(tokenProviderCalls).toBe(1);
+    });
+
+    it("tokenProvider 未設定で 401 の場合はリトライせず即 throw する", async () => {
+      const client = new ConfluenceClient(
+        "https://confluence.example.com",
+        "token",
+        "SPACE",
+        "root",
+        ["root"],
+        undefined,
+      );
+      spyOn(client as unknown as { httpRequest: HttpClient["httpRequest"] }, "httpRequest").mockResolvedValue({
+        status: 401,
+        json: () => Promise.resolve({}),
+      });
+
+      await expect(client.callApi("GET", "/test")).rejects.toThrow("HTTP Error: 401");
+      expect(sleepSpy).not.toHaveBeenCalled();
     });
   });
 });

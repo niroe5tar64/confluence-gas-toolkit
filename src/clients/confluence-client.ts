@@ -1,6 +1,6 @@
 import { CONFLUENCE_PAGE_CONFIGS, type PageConfig, validatePageConfigs } from "~/config";
 import type { Confluence, JobName } from "~/types";
-import { createLogger, getEnvVariable, toQueryString } from "~/utils";
+import { createLogger, getEnvVariable, sleep, toQueryString } from "~/utils";
 
 import HttpClient from "./http-client";
 
@@ -52,12 +52,14 @@ export function getConfluenceClient(jobName: JobName): ConfluenceClient {
   }
 
   // 複数ページ対応：第1ページをメインのrootPageIdとして使用
+  // tokenProvider: 401 時に認証情報を再取得してリトライするため（社内API利用ルール）
   const client = new ConfluenceClient(
     baseUrl,
     token,
     config.spaceKey,
     config.rootPageIds[0],
     config.rootPageIds,
+    () => getEnvVariable("CONFLUENCE_PAT") ?? "",
   );
 
   clientsMap.set(jobName, client);
@@ -90,6 +92,7 @@ export default class ConfluenceClient extends HttpClient {
   private spaceKey: string;
   private rootPageId: string;
   public readonly rootPageIds: string[];
+  private readonly tokenProvider?: () => string;
   private logger = createLogger("ConfluenceClient");
 
   /**
@@ -100,6 +103,7 @@ export default class ConfluenceClient extends HttpClient {
    * @param {string} spaceKey - 対象となる Confluence の Space Key
    * @param {string} rootPageId - 対象となる Confluence Page の ID (複数ページ指定時はメインのページID)
    * @param {string[]} [rootPageIds] - 複数ページ対応：すべての対象ページIDの配列
+   * @param {() => string} [tokenProvider] - 401 時に認証トークンを再取得する関数（社内API利用ルールに基づくリトライ用）
    */
   public constructor(
     baseUrl: string,
@@ -107,6 +111,7 @@ export default class ConfluenceClient extends HttpClient {
     spaceKey: string,
     rootPageId: string,
     rootPageIds?: string[],
+    tokenProvider?: () => string,
   ) {
     super();
     this.baseUrl = baseUrl;
@@ -114,6 +119,7 @@ export default class ConfluenceClient extends HttpClient {
     this.spaceKey = spaceKey;
     this.rootPageId = rootPageId;
     this.rootPageIds = rootPageIds || [rootPageId];
+    this.tokenProvider = tokenProvider;
 
     this.logger.debug("ConfluenceClient初期化", {
       spaceKey: this.spaceKey,
@@ -131,20 +137,87 @@ export default class ConfluenceClient extends HttpClient {
   }
 
   /**
+   * 現在の this.token で RequestInit を組み立てる関数を返す。
+   * 401 リトライでトークン更新後、同じ関数を再度呼ぶと新しいトークンでリクエストできる。
+   */
+  private buildCallOptions(
+    method: "GET" | "POST" | "PUT" | "DELETE",
+    requestBody?: string | Record<string, string | number | boolean> | Blob,
+  ): () => RequestInit {
+    const body = requestBody
+      ? typeof requestBody === "string" || requestBody instanceof Blob
+        ? requestBody
+        : JSON.stringify(requestBody)
+      : undefined;
+    return () => ({
+      method,
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        Accept: "application/json",
+      },
+      body,
+    });
+  }
+
+  /**
+   * Response（fetch）または HTTPResponse（GAS）から HTTP ステータスコードを取得する。
+   */
+  private static getResponseStatus(
+    response: Response | GoogleAppsScript.URL_Fetch.HTTPResponse,
+  ): number {
+    return "status" in response ? response.status : response.getResponseCode();
+  }
+
+  /** HTTP ステータスが 4xx（クライアントエラー）かどうか。 */
+  private static isClientError(status: number): boolean {
+    return status >= 400 && status < 500;
+  }
+
+  /** HTTP ステータスが 5xx（サーバーエラー）かどうか。 */
+  private static isServerError(status: number): boolean {
+    return status >= 500 && status < 600;
+  }
+
+  /**
+   * 社内API利用ルールに基づき、503/401 のときリトライを行う。
+   * リトライした場合は state を更新し true を返す。リトライしない場合は false。
+   */
+  private async tryRetryForErrorStatus(
+    status: number,
+    state: { did503Retry: boolean; did401Retry: boolean },
+    method: string,
+    endpoint: string,
+  ): Promise<boolean> {
+    if (status === 503 && !state.did503Retry) {
+      state.did503Retry = true;
+      this.logger.debug("503 のため10秒待機してリトライ", { method, endpoint });
+      await sleep(10_000);
+      return true;
+    }
+    if (status === 401 && this.tokenProvider && !state.did401Retry) {
+      const newToken = this.tokenProvider();
+      if (newToken) {
+        this.token = newToken;
+        state.did401Retry = true;
+        this.logger.debug("401 のため認証情報を再取得してリトライ", { method, endpoint });
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Confluence API に対して HTTP リクエストを送信する汎用メソッド。
    *
-   * 指定した HTTP メソッド、エンドポイント、およびリクエストボディを使用して API リクエストを行う。
-   * 環境に応じて、以下の方法でリクエストを実行する：
-   * - **ローカル環境 (Node.js / Bun)**: `fetch()`
-   * - **GAS 環境**: `UrlFetchApp.fetch()`
+   * 社内API利用ルールに基づくリトライ：
+   * - 503: 10秒以上待って1回だけリトライ。2回連続503の場合はリトライせず中断。
+   * - 401: tokenProvider がある場合に認証情報を再取得して1回リトライ。再び401の場合はリトライしない。
+   * - その他 4xx/5xx・接続断・タイムアウト: リトライしない。
    *
    * @template T - 期待するレスポンスの型
    * @param {"GET" | "POST" | "PUT" | "DELETE"} method - HTTP メソッド
    * @param {string} endpoint - API のエンドポイント (例: `"/rest/api/content/12345"`)
    * @param {string | Record<string, string | number | boolean> | Blob} [requestBody] - 送信するリクエストボディ
-   *   - `string`: JSON 以外のテキストデータを送信する場合
-   *   - `Record<string, string | number | boolean>`: JSON 形式のデータを送信する場合 (自動的に `JSON.stringify()` される)
-   *   - `Blob`: バイナリデータを送信する場合
    * @returns {Promise<T>} API レスポンスを JSON としてパースしたオブジェクト
    *
    * @throws {Error} API リクエストに失敗した場合
@@ -154,60 +227,51 @@ export default class ConfluenceClient extends HttpClient {
     endpoint: string,
     requestBody?: string | Record<string, string | number | boolean> | Blob,
   ): Promise<T> {
-    this.logger.debug("リクエスト送信", { method, endpoint });
+    const getOptions = this.buildCallOptions(method, requestBody);
+    const state = { did503Retry: false, did401Retry: false };
+    let lastStatus: number | undefined;
+    const maxAttempts = 3;
 
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${this.token}`,
-      Accept: "application/json",
-    };
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      this.logger.debug("リクエスト送信", { method, endpoint });
+      lastStatus = undefined;
 
-    const body = requestBody
-      ? typeof requestBody === "string" || requestBody instanceof Blob
-        ? requestBody
-        : JSON.stringify(requestBody)
-      : undefined;
+      try {
+        const response = await this.httpRequest(`${this.baseUrl}${endpoint}`, getOptions());
+        lastStatus = ConfluenceClient.getResponseStatus(response);
 
-    const options: RequestInit = { method, headers, body };
+        if (
+          ConfluenceClient.isClientError(lastStatus) ||
+          ConfluenceClient.isServerError(lastStatus)
+        ) {
+          if (await this.tryRetryForErrorStatus(lastStatus, state, method, endpoint)) continue;
+          this.logger.error("API呼び出し失敗", undefined, {
+            method,
+            endpoint,
+            status: lastStatus,
+          });
+          throw new Error(`HTTP Error: ${lastStatus}`);
+        }
 
-    let status: number | undefined;
-
-    try {
-      const response = await this.httpRequest(`${this.baseUrl}${endpoint}`, options);
-      const json = await this.responseToJson(response);
-
-      if ("status" in response) {
-        status = response.status;
+        const json = await this.responseToJson(response);
+        const transformed = this.deepTransform(json) as T;
+        this.logger.debug("レスポンス受信", { method, endpoint, status: lastStatus });
+        return transformed;
+      } catch (error: unknown) {
+        if (lastStatus === undefined) {
+          this.logger.error("API呼び出し失敗", error instanceof Error ? error : undefined, {
+            method,
+            endpoint,
+            status: "unknown",
+          });
+          throw error;
+        }
+        throw error;
       }
-      if ("getResponseCode" in response) {
-        status = response.getResponseCode();
-      }
-
-      // ローカル環境 (Node.js / Bun)
-      if ("status" in response && response.status >= 400) {
-        throw new Error(`HTTP Error: ${response.status}`);
-      }
-      // GAS 環境
-      if ("getResponseCode" in response && response.getResponseCode() >= 400) {
-        throw new Error(`HTTP Error: ${response.getResponseCode()}`);
-      }
-
-      const transformed = this.deepTransform(json) as T;
-
-      this.logger.debug("レスポンス受信", {
-        method,
-        endpoint,
-        status,
-      });
-
-      return transformed;
-    } catch (error: unknown) {
-      this.logger.error("API呼び出し失敗", error instanceof Error ? error : undefined, {
-        method,
-        endpoint,
-        status: status ?? "unknown",
-      });
-      throw error;
     }
+
+    this.logger.error("API呼び出し失敗", undefined, { method, endpoint, status: lastStatus });
+    throw new Error(`HTTP Error: ${lastStatus ?? "unknown"}`);
   }
 
   /**
