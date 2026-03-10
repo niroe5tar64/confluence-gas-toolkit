@@ -235,7 +235,7 @@ export default class ConfluenceClient extends HttpClient {
    *                                    デフォルトの CQL に対して、実行時に追加される検索クエリを指定します。
    * @param {Confluence.SearchRequestOption} [request.option] - 検索リクエストの追加オプション。
    * @param {number} [request.option.start] - 取得を開始する位置を指定するオフセット。デフォルトは 0 です。
-   * @param {number} [request.option.limit] - 取得する結果の最大数。デフォルトは 25 です。
+   * @param {number} [request.option.limit] - 1リクエストあたりの取得件数。未指定時は API のデフォルトに依存。CQL 検索では expand によりサーバー側上限あり（body 時 50、history/version 等 200、expand なし 1000）。
    * @param {string} [request.option.expand] - 取得する追加情報を指定するためのプロパティ。カンマ区切りで複数指定可能です。
    * @param {string} [request.option.cqlcontext] - 検索クエリのコンテキストを指定する JSON 文字列。例：'{"spaceKey": "SomeSpaceKey"}'
    *

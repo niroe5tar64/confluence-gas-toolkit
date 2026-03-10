@@ -18,7 +18,11 @@ export namespace Confluence {
   export interface SearchRequestOption {
     /** 取得を開始する位置を指定するオフセット（デフォルト: 0） */
     start?: number;
-    /** 取得する結果の最大数（デフォルト: 25） */
+    /**
+     * 1リクエストあたりの取得件数。
+     * 未指定時は API のデフォルトに依存する。
+     * なお CQL 検索では expand によりサーバー側上限が異なる（body 指定時 50、その他 200、expand なし 1000）。
+     */
     limit?: number;
     /** 取得する追加情報を指定（カンマ区切りで複数指定可能） */
     expand?: string;

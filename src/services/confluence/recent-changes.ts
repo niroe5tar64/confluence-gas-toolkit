@@ -1,6 +1,6 @@
 import { getConfluenceClient } from "~/clients";
 import type { Confluence, JobName } from "~/types";
-import { createLogger, formatDateJST } from "~/utils";
+import { createLogger, formatDateJST, sleep } from "~/utils";
 
 /**
  * Confluence API を呼び出す汎用サービス関数。
@@ -50,6 +50,8 @@ export async function fetchRecentChanges(
   let pageCount = 1;
   while (nextEndpoint) {
     pageCount += 1;
+    // Confluence の帯域制限を避けるため、ページネーション間に短い待機を入れる
+    await sleep(400);
     const nextPages = await fetchConfluenceApi<Confluence.SearchPage>(nextEndpoint, jobName);
     // 結果を蓄積
     searchResults = [...searchResults, ...nextPages.results];
@@ -91,6 +93,7 @@ export async function fetchAllPages(jobName: JobName): Promise<Confluence.Search
   let searchResults = searchPages.results;
   let nextEndpoint = searchPages._links?.next;
   while (nextEndpoint) {
+    await sleep(400);
     const nextPages = await fetchConfluenceApi<Confluence.SearchPage>(nextEndpoint, jobName);
     // 結果を蓄積
     searchResults = [...searchResults, ...nextPages.results];
