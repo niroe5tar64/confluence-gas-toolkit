@@ -1,8 +1,41 @@
 import { IO_CONFIG } from "~/config";
 import { isJobData, type JobData, type JobDataFileName } from "~/types";
-import { createLogger, readFile, writeFile } from "~/utils";
+import { createLogger, isLocalEnvironment, readFile, writeFile } from "~/utils";
 
 const logger = createLogger("JobData");
+
+/** GAS 用 Script Properties のキー（ファイル名 → 短いキー名） */
+const JOB_DATA_PROPERTY_KEYS: Record<JobDataFileName, string> = {
+  "confluence-update-notify-job.json": "JOB_DATA_UPDATE_NOTIFY",
+  "confluence-create-notify-job.json": "JOB_DATA_CREATE_NOTIFY",
+  "confluence-summary-job.json": "JOB_DATA_SUMMARY",
+} as const;
+
+function jobDataPropertyKey(fileName: JobDataFileName): string {
+  return JOB_DATA_PROPERTY_KEYS[fileName];
+}
+
+/**
+ * 保存先から生のジョブデータを読み取りオブジェクトで返す。
+ * 読み取り失敗時はログを出して null を返す。
+ */
+function readRawJobData(fileName: JobDataFileName): object | null {
+  try {
+    if (isLocalEnvironment()) {
+      return readFile(`${IO_CONFIG.dataDir}/${fileName}`) as object;
+    }
+    const value = PropertiesService.getScriptProperties().getProperty(jobDataPropertyKey(fileName));
+    if (value === null || value === undefined) {
+      logger.warn("ジョブデータ読み込み失敗、デフォルト値を使用", { fileName, reason: "no property" });
+      return null;
+    }
+    return JSON.parse(value) as object;
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : "unknown error";
+    logger.warn("ジョブデータ読み込み失敗、デフォルト値を使用", { fileName, reason });
+    return null;
+  }
+}
 
 /**
  * デフォルトのポーリング情報を生成する関数。
@@ -23,7 +56,8 @@ function defaultJobData(): JobData {
  * 結果を JSON ファイルに保存します。
  *
  * - デフォルトのポーリング情報は `defaultJobData` 関数で生成されます。
- * - 保存先のファイルは環境別ディレクトリ (`IO_CONFIG.dataDir`) 内の指定されたファイル名です。
+ * - ローカル: 環境別ディレクトリ (`IO_CONFIG.dataDir`) 内のファイルに保存。
+ * - GAS: Script Properties に保存（キーは JOB_DATA_UPDATE_NOTIFY / JOB_DATA_CREATE_NOTIFY / JOB_DATA_SUMMARY）。
  *
  * @param {Partial<JobData>} partialJobData - 更新するポーリング情報の一部。
  *   - 指定されたプロパティのみが既存の情報に上書きされます。
@@ -39,7 +73,14 @@ export function updateJobData(partialJobData: Partial<JobData>, fileName: JobDat
   const jobData = { ...defaultJobData(), ...partialJobData };
 
   try {
-    writeFile(`${IO_CONFIG.dataDir}/${fileName}`, JSON.stringify(jobData, null, 2));
+    if (isLocalEnvironment()) {
+      writeFile(`${IO_CONFIG.dataDir}/${fileName}`, JSON.stringify(jobData, null, 2));
+    } else {
+      PropertiesService.getScriptProperties().setProperty(
+        jobDataPropertyKey(fileName),
+        JSON.stringify(jobData, null, 2),
+      );
+    }
     logger.debug("ジョブデータ書き込み成功", {
       fileName,
       timestamp: jobData.timestamp,
@@ -61,8 +102,9 @@ export function updateJobData(partialJobData: Partial<JobData>, fileName: JobDat
  * 指定されたファイル名から保存されたポーリング情報を読み取り、`JobData` 型として解析します。
  * ファイルの内容が `JobData` 型に適合しない場合は `null` を返します。
  *
- * - 保存先のファイルは環境別ディレクトリ (`IO_CONFIG.dataDir`) 内の指定されたファイル名です。
- * - ファイルが存在しない場合や内容が不正な場合は `null` を返します。
+ * - ローカル: 環境別ディレクトリ (`IO_CONFIG.dataDir`) 内のファイルから読み取り。
+ * - GAS: Script Properties から読み取り（キーは JOB_DATA_UPDATE_NOTIFY / JOB_DATA_CREATE_NOTIFY / JOB_DATA_SUMMARY）。
+ * - 存在しない場合や内容が不正な場合は `null` を返します。
  *
  * @param {JobDataFileName} fileName - 読み取るポーリング情報のファイル名。
  *
@@ -77,28 +119,14 @@ export function updateJobData(partialJobData: Partial<JobData>, fileName: JobDat
  * }
  */
 export function parseJobData(fileName: JobDataFileName): JobData | null {
-  try {
-    const jobData = readFile(`${IO_CONFIG.dataDir}/${fileName}`);
+  const raw = readRawJobData(fileName);
+  if (raw === null) return null;
 
-    if (!isJobData(jobData)) {
-      logger.warn("ジョブデータ形式不正、デフォルト値を使用", {
-        fileName,
-        reason: "invalid format",
-      });
-      return null;
-    }
-
-    logger.debug("ジョブデータ読み込み成功", {
-      fileName,
-      timestamp: jobData.timestamp,
-    });
-    return jobData;
-  } catch (error) {
-    const reason = error instanceof Error ? error.message : "unknown error";
-    logger.warn("ジョブデータ読み込み失敗、デフォルト値を使用", {
-      fileName,
-      reason,
-    });
+  if (!isJobData(raw)) {
+    logger.warn("ジョブデータ形式不正、デフォルト値を使用", { fileName, reason: "invalid format" });
     return null;
   }
+
+  logger.debug("ジョブデータ読み込み成功", { fileName, timestamp: raw.timestamp });
+  return raw;
 }

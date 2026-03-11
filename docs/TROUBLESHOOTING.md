@@ -131,8 +131,12 @@
 - トリガーが重複して設定されている
 
 **解決策**:
-1. `data/` ディレクトリ（または Script Properties）の状態を確認
+1. `data/` ディレクトリ（ローカル）または Script Properties（GAS）の状態を確認
 2. GAS のトリガー設定で重複がないか確認
+
+### ポーリング日時の保存先（GAS）
+
+GAS 上では前回ポーリング日時は **Script Properties** に保存されています。キーは `JOB_DATA_UPDATE_NOTIFY` / `JOB_DATA_CREATE_NOTIFY` / `JOB_DATA_SUMMARY`。GAS エディタの「プロジェクトの設定」→「スクリプト プロパティ」で確認・手動編集できます。
 
 ## ビルド・デプロイ関連
 

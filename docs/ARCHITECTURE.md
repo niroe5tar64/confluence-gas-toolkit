@@ -188,10 +188,10 @@ return PropertiesService.getScriptProperties().getProperty(key);
 
 | 環境 | 保存先 |
 |------|--------|
-| GAS | Google Drive に `data/*.json` を作成して永続化（Drive 権限が必要） |
-| ローカル | リポジトリ直下の `data/*.json` ファイル |
+| GAS | Script Properties（ジョブデータ用キー: `JOB_DATA_UPDATE_NOTIFY`, `JOB_DATA_CREATE_NOTIFY`, `JOB_DATA_SUMMARY`） |
+| ローカル | リポジトリ直下の `data/*.json` ファイル（環境別ディレクトリ `confluence-gas-toolkit/dev` または `prod`） |
 
-> **Note**: GAS へのデプロイ時は Drive API 権限付与（スクリプトの「Google Drive へのアクセス」）を忘れないでください。
+> **Note**: ジョブデータ（前回ポーリング日時など）は GAS 上では Script Properties に保存するため、Drive 権限は不要です。
 
 ## データフロー
 
