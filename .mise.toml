@@ -1,0 +1,3 @@
+# bunx clasp が Node を参照するため、プロジェクト配下で Node バージョンを解決する
+[tools]
+node = "24"
