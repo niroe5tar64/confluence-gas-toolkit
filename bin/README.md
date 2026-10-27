@@ -150,7 +150,7 @@ bun run open:prod  # 本番環境
 #### 処理フロー
 
 1. `prepareClaspJson()` で適切な `.clasp.json` を準備
-2. `bunx clasp open` でブラウザを開く
+2. `bunx clasp open-script` でブラウザを開く
 
 ---
 
