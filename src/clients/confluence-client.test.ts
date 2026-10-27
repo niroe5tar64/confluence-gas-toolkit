@@ -25,7 +25,7 @@ mock.module("~/config", () => ({
   SLACK_ROUTE,
 }));
 
-import HttpClient from "./http-client";
+import type HttpClient from "./http-client";
 
 // httpRequest の戻り値型を満たすため、status と json だけを持つモックを Response として扱う
 const fakeResponse = (status: number, body: unknown) =>
@@ -169,7 +169,10 @@ describe("getConfluenceClient", () => {
       const mockResponse = (status: number, body: unknown) =>
         Promise.resolve(fakeResponse(status, body));
       let callCount = 0;
-      spyOn(client as unknown as { httpRequest: HttpClient["httpRequest"] }, "httpRequest").mockImplementation(() => {
+      spyOn(
+        client as unknown as { httpRequest: HttpClient["httpRequest"] },
+        "httpRequest",
+      ).mockImplementation(() => {
         callCount += 1;
         if (callCount === 1) return mockResponse(503, {});
         return mockResponse(200, { data: "ok" });
@@ -192,7 +195,10 @@ describe("getConfluenceClient", () => {
         ["root"],
       );
       const mock503 = () => Promise.resolve(fakeResponse(503, {}));
-      spyOn(client as unknown as { httpRequest: HttpClient["httpRequest"] }, "httpRequest").mockImplementation(() => mock503());
+      spyOn(
+        client as unknown as { httpRequest: HttpClient["httpRequest"] },
+        "httpRequest",
+      ).mockImplementation(() => mock503());
 
       await expect(client.callApi("GET", "/test")).rejects.toThrow("HTTP Error: 503");
       expect(sleepSpy).toHaveBeenCalledTimes(1);
@@ -213,12 +219,17 @@ describe("getConfluenceClient", () => {
         tokenProvider,
       );
       let callCount = 0;
-      spyOn(client as unknown as { httpRequest: HttpClient["httpRequest"] }, "httpRequest").mockImplementation((_url, opts) => {
+      spyOn(
+        client as unknown as { httpRequest: HttpClient["httpRequest"] },
+        "httpRequest",
+      ).mockImplementation((_url, opts) => {
         callCount += 1;
         if (callCount === 1) {
           return Promise.resolve(fakeResponse(401, {}));
         }
-        expect((opts?.headers as Record<string, string> | undefined)?.Authorization).toBe("Bearer new-token");
+        expect((opts?.headers as Record<string, string> | undefined)?.Authorization).toBe(
+          "Bearer new-token",
+        );
         return Promise.resolve(fakeResponse(200, { data: "ok" }));
       });
 
@@ -244,7 +255,10 @@ describe("getConfluenceClient", () => {
         tokenProvider,
       );
       const mock401 = () => Promise.resolve(fakeResponse(401, {}));
-      spyOn(client as unknown as { httpRequest: HttpClient["httpRequest"] }, "httpRequest").mockImplementation(() => mock401());
+      spyOn(
+        client as unknown as { httpRequest: HttpClient["httpRequest"] },
+        "httpRequest",
+      ).mockImplementation(() => mock401());
 
       await expect(client.callApi("GET", "/test")).rejects.toThrow("HTTP Error: 401");
       expect(tokenProviderCalls).toBe(1);
@@ -259,7 +273,10 @@ describe("getConfluenceClient", () => {
         ["root"],
         undefined,
       );
-      spyOn(client as unknown as { httpRequest: HttpClient["httpRequest"] }, "httpRequest").mockResolvedValue(fakeResponse(401, {}));
+      spyOn(
+        client as unknown as { httpRequest: HttpClient["httpRequest"] },
+        "httpRequest",
+      ).mockResolvedValue(fakeResponse(401, {}));
 
       await expect(client.callApi("GET", "/test")).rejects.toThrow("HTTP Error: 401");
       expect(sleepSpy).not.toHaveBeenCalled();

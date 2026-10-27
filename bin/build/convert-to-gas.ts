@@ -97,4 +97,4 @@ const convertAndWriteGoogleAppsScript = async (
   fs.writeFileSync(output, code);
 };
 
-export { convertToGoogleAppsScript, convertAndWriteGoogleAppsScript };
+export { convertAndWriteGoogleAppsScript, convertToGoogleAppsScript };

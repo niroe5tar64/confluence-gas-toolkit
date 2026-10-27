@@ -26,7 +26,10 @@ function readRawJobData(fileName: JobDataFileName): object | null {
     }
     const value = PropertiesService.getScriptProperties().getProperty(jobDataPropertyKey(fileName));
     if (value === null || value === undefined) {
-      logger.warn("ジョブデータ読み込み失敗、デフォルト値を使用", { fileName, reason: "no property" });
+      logger.warn("ジョブデータ読み込み失敗、デフォルト値を使用", {
+        fileName,
+        reason: "no property",
+      });
       return null;
     }
     return JSON.parse(value) as object;
