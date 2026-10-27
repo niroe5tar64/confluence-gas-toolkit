@@ -25,7 +25,10 @@ const loadDotEnv = (envPath: string) => {
     ) {
       value = value.slice(1, -1);
     }
-    process.env[key] = value;
+    // 明示的に指定された環境変数を .env で上書きしない
+    if (!(key in process.env)) {
+      process.env[key] = value;
+    }
   }
 };
 

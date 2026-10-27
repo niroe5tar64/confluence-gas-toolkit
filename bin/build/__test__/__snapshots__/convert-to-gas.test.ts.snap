@@ -1,17 +1,22 @@
 // Bun Snapshot v1, https://bun.sh/docs/test/snapshots
 
 exports[`convert-to-gas convertToGoogleAppsScript 1`] = `
-"var main = function(exports) {
-  "use strict";
-  const hello = "world";
-  const sayHello = (name) => {
-    console.log(\`Hello \${name}!\`);
-  };
-  exports.hello = hello;
-  exports.sayHello = sayHello;
-  Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-  return exports;
-}({});
+"var main = (function(exports) {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	// bin/build/__test__/sample/module.ts
+	var hello = "world";
+	// bin/build/__test__/sample/main.ts
+	/**
+	* Just a simple function that says hello.
+	* @param name
+	*/
+	var sayHello = (name) => {
+		console.log(\`Hello \${name}!\`);
+	};
+	exports.hello = hello;
+	exports.sayHello = sayHello;
+	return exports;
+})({});
 
 
 const hello = main.hello;
