@@ -22,8 +22,9 @@ import { isLocalEnvironment } from "./env";
 export function writeFile(filePath: string, content: string): void {
   if (isLocalEnvironment()) {
     // ローカル環境 (Node.js/Bun)
-    const fs = require("node:fs");
-    const path = require("node:path");
+    // バンドラーに解決させないよう、require ではなく getBuiltinModule で取得する
+    const fs = process.getBuiltinModule("node:fs");
+    const path = process.getBuiltinModule("node:path");
     const dirPath = path.dirname(filePath);
 
     // ディレクトリが存在しない場合は作成
@@ -75,7 +76,7 @@ export function readFile(filePath: string): object {
   let content = "";
   if (isLocalEnvironment()) {
     // ローカル環境 (Node.js/Bun)
-    const fs = require("node:fs");
+    const fs = process.getBuiltinModule("node:fs");
     if (!fs.existsSync(filePath)) {
       return [];
     }
