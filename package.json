@@ -33,5 +33,8 @@
     "check": "biome check --write .",
     "typecheck": "tsc --noEmit",
     "validate": "bun run typecheck && bun run check"
+  },
+  "overrides": {
+    "zod": "^4.6.6"
   }
 }
